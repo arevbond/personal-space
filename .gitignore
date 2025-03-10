@@ -1,0 +1,21 @@
+# idea files
+
+.idea
+
+# vs code files
+
+.vscode
+
+# configs
+.env
+
+config.active.yaml
+!.gitkeep
+
+pureftpd.passwd
+
+# executable
+
+.exe
+
+.xml
