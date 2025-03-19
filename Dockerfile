@@ -1,0 +1,25 @@
+FROM golang:1.24 AS build-stage
+
+WORKDIR /app
+
+COPY go.mod ./
+RUN go mod download
+
+COPY . .
+
+RUN CGO_ENABLED=0 GOOS=linux go build -o /arevbond ./cmd/arevbond/main.go
+
+FROM alpine AS build-release-stage
+
+RUN apk add --no-cache tzdata
+ENV TZ="Europe/Moscow"
+
+WORKDIR /
+
+COPY --from=build-stage /arevbond /arevbond
+
+COPY /.env /.env
+
+EXPOSE 8080
+
+ENTRYPOINT ["/arevbond"]
