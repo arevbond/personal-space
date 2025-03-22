@@ -2,7 +2,7 @@ FROM golang:1.24 AS build-stage
 
 WORKDIR /app
 
-COPY go.mod ./
+COPY go.sum go.mod ./
 RUN go mod download
 
 COPY . .
