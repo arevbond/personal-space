@@ -5,6 +5,7 @@ import (
 	"log"
 	"log/slog"
 
+	"github.com/arevbond/arevbond-blog/internal/app"
 	"github.com/arevbond/arevbond-blog/internal/config"
 )
 
@@ -20,7 +21,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-	logger.Debug("server", slog.Any("server", cfg.Server))
+	logger.Info("server", slog.Any("server", cfg.Server))
 
 	logger.Info("application started")
+
+	app := app.New(logger, cfg)
+
+	if err := app.Run(); err != nil {
+		panic(err)
+	}
 }

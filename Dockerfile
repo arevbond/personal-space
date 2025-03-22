@@ -7,6 +7,8 @@ RUN go mod download
 
 COPY . .
 
+EXPOSE 8080
+
 RUN CGO_ENABLED=0 GOOS=linux go build -o /arevbond ./cmd/arevbond/main.go
 
 FROM alpine AS build-release-stage
