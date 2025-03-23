@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
 	"log/slog"
@@ -14,6 +15,7 @@ var configPath = flag.String("config", "configs/application.yaml", "path to appl
 func main() {
 	flag.Parse()
 
+	// TODO: make custom logger
 	logger := slog.Default()
 
 	cfg, err := config.New(*configPath)
@@ -27,7 +29,9 @@ func main() {
 
 	app := app.New(logger, cfg)
 
-	if err := app.Run(); err != nil {
+	ctx := context.Background()
+
+	if err := app.Run(ctx); err != nil {
 		panic(err)
 	}
 }

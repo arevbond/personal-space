@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 
@@ -21,8 +22,8 @@ func New(log *slog.Logger, cfg config.Config) *App {
 	}
 }
 
-func (a *App) Run() error {
-	if err := a.Server.Run(); err != nil {
+func (a *App) Run(ctx context.Context) error {
+	if err := a.Server.Run(ctx); err != nil {
 		return fmt.Errorf("app run: %w", err)
 	}
 
