@@ -32,6 +32,7 @@ func New(log *slog.Logger, cfg config.Server) *Server {
 	srv := &http.Server{
 		ReadHeaderTimeout: readHeaderTimeot,
 		Addr:              addr,
+		ErrorLog:          slog.NewLogLogger(log.Handler(), slog.LevelError),
 	}
 
 	return &Server{
