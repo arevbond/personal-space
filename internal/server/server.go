@@ -2,8 +2,10 @@ package server
 
 import (
 	"context"
+	"embed"
 	"errors"
 	"fmt"
+	"html/template"
 	"log/slog"
 	"net"
 	"net/http"
@@ -16,6 +18,9 @@ import (
 	"github.com/arevbond/arevbond-blog/internal/config"
 )
 
+//go:embed views/*
+var templatesFS embed.FS
+
 const (
 	shutdownTimeout  = 5 * time.Second
 	readHeaderTimeot = 5 * time.Second
@@ -23,7 +28,8 @@ const (
 
 type Server struct {
 	*http.Server
-	log *slog.Logger
+	log  *slog.Logger
+	tmpl *template.Template
 }
 
 func New(log *slog.Logger, cfg config.Server) *Server {
@@ -38,12 +44,15 @@ func New(log *slog.Logger, cfg config.Server) *Server {
 	return &Server{
 		Server: srv,
 		log:    log,
+		tmpl:   template.Must(template.ParseFS(templatesFS, "views/*.html")),
 	}
 }
 
 func (s *Server) WithRoutes() *Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /ping", s.ping)
+	mux.HandleFunc("GET /cv", s.htmlCVpreviw)
+	mux.HandleFunc("GET /", s.htmlIndex)
 
 	s.Server.Handler = mux
 

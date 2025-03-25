@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8" />
+        {{ template "heads.html" }}
+        <title>Edit CV</title>
+    </head>
+    <body>
+        <div class="container-fluid h-100">
+            <div class="row h-100">
+                <div class="col-6 p-0">
+                    <textarea
+                        class="form-control h-100"
+                        id="markdown-input"
+                        rows="20"
+                    >
+                # Ваше резюме
+
+                ## О себе
+
+                ## Опыт работы
+              </textarea
+                    >
+                </div>
+                <div class="col-6 p-0">
+                    <div
+                        id="markdown-preview"
+                        class="h-100 p-3 border overflow-auto"
+                    >
+                        <!-- Здесь будет preview -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    <html />
+</html>

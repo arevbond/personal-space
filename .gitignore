@@ -12,10 +12,4 @@
 config.active.yaml
 !.gitkeep
 
-pureftpd.passwd
-
-# executable
-
-.exe
-
-.xml
+test-cover/
