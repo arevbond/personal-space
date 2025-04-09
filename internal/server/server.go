@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/arevbond/arevbond-blog/internal/config"
+	"github.com/arevbond/arevbond-blog/internal/models"
 )
 
 //go:embed views/*
@@ -26,13 +27,18 @@ const (
 	readerHeaderTimeout = 5 * time.Second
 )
 
-type Server struct {
-	*http.Server
-	log  *slog.Logger
-	tmpl *template.Template
+type CVManager interface {
+	ListCV(ctx context.Context) ([]models.CV, error)
 }
 
-func New(log *slog.Logger, cfg config.Server) *Server {
+type Server struct {
+	*http.Server
+	log     *slog.Logger
+	tmpl    *template.Template
+	manager CVManager
+}
+
+func New(log *slog.Logger, cfg config.Server, manager CVManager) *Server {
 	addr := net.JoinHostPort(cfg.Host, strconv.Itoa(cfg.Port))
 	//nolint: exhaustruct // default options in http server is good
 	srv := &http.Server{
@@ -42,9 +48,10 @@ func New(log *slog.Logger, cfg config.Server) *Server {
 	}
 
 	return &Server{
-		Server: srv,
-		log:    log,
-		tmpl:   template.Must(template.ParseFS(templatesFS, "views/*.html")),
+		Server:  srv,
+		log:     log,
+		tmpl:    template.Must(template.ParseFS(templatesFS, "views/*.html")),
+		manager: manager,
 	}
 }
 
