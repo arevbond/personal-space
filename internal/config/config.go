@@ -8,12 +8,21 @@ import (
 )
 
 type Config struct {
-	Server Server `yaml:"server"`
+	Server  Server  `yaml:"server"`
+	Storage Storage `yaml:"storage"`
 }
 
 type Server struct {
 	Host string `yaml:"host"`
 	Port int    `yaml:"port"`
+}
+
+type Storage struct {
+	Host         string `yaml:"host"`
+	Port         int    `yaml:"port"`
+	User         string `yaml:"user"`
+	Password     string `yaml:"password"`
+	DatabaseName string `yaml:"database_name"`
 }
 
 func New(configPath string) (Config, error) {

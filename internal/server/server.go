@@ -51,7 +51,8 @@ func New(log *slog.Logger, cfg config.Server) *Server {
 func (s *Server) WithRoutes() *Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /ping", s.ping)
-	mux.HandleFunc("GET /cv", s.htmlCVpreviw)
+	// mux.HandleFunc("GET /cv", s.htmlCVpreview)
+	mux.HandleFunc("GET /cv", s.htmlAllCV)
 	mux.HandleFunc("GET /", s.htmlIndex)
 
 	s.Handler = mux

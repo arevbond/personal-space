@@ -6,3 +6,9 @@ server:
   # running in docker compose
   host: "app-arevbond"
   port: 8080
+storage:
+  host: blog-database
+  port: 5432
+  user: arevbond
+  password: 123password123
+  database_name: arevbond

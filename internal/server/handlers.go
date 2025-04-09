@@ -19,9 +19,18 @@ func (s *Server) htmlIndex(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) htmlCVpreviw(w http.ResponseWriter, r *http.Request) {
+func (s *Server) htmlCVpreview(w http.ResponseWriter, r *http.Request) {
 	if err := s.tmpl.ExecuteTemplate(w, "edit_cv.html", nil); err != nil {
 		s.log.Error("can't render edit cv html", slog.Any("error", err))
+		http.Error(w, "Error while render page", http.StatusInternalServerError)
+
+		return
+	}
+}
+
+func (s *Server) htmlAllCV(w http.ResponseWriter, r *http.Request) {
+	if err := s.tmpl.ExecuteTemplate(w, "all_cv.html", nil); err != nil {
+		s.log.Error("can't render all cv", slog.Any("error", err))
 		http.Error(w, "Error while render page", http.StatusInternalServerError)
 
 		return

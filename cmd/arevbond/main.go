@@ -29,7 +29,10 @@ func main() {
 
 	logger.Info("application started")
 
-	app := app.New(logger, cfg)
+	app, err := app.New(logger, cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	ctx := context.Background()
 
