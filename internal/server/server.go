@@ -22,8 +22,8 @@ import (
 var templatesFS embed.FS
 
 const (
-	shutdownTimeout  = 5 * time.Second
-	readHeaderTimeot = 5 * time.Second
+	shutdownTimeout     = 5 * time.Second
+	readerHeaderTimeout = 5 * time.Second
 )
 
 type Server struct {
@@ -36,7 +36,7 @@ func New(log *slog.Logger, cfg config.Server) *Server {
 	addr := net.JoinHostPort(cfg.Host, strconv.Itoa(cfg.Port))
 	//nolint: exhaustruct // default options in http server is good
 	srv := &http.Server{
-		ReadHeaderTimeout: readHeaderTimeot,
+		ReadHeaderTimeout: readerHeaderTimeout,
 		Addr:              addr,
 		ErrorLog:          slog.NewLogLogger(log.Handler(), slog.LevelError),
 	}
@@ -54,7 +54,7 @@ func (s *Server) WithRoutes() *Server {
 	mux.HandleFunc("GET /cv", s.htmlCVpreviw)
 	mux.HandleFunc("GET /", s.htmlIndex)
 
-	s.Server.Handler = mux
+	s.Handler = mux
 
 	return s
 }
