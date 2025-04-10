@@ -1,8 +1,12 @@
 package server
 
 import (
+	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/arevbond/arevbond-blog/internal/models"
 )
@@ -51,4 +55,48 @@ func (s *Server) htmlAllCV(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
+}
+
+func (s *Server) uploadcv(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, "Error while parsing form", http.StatusInternalServerError)
+
+		return
+	}
+
+	file, heads, err := r.FormFile("cv")
+	if err != nil {
+		http.Error(w, "Error while parsing file", http.StatusInternalServerError)
+
+		return
+	}
+
+	s.log.Debug("income cv", slog.String("name", heads.Filename))
+
+	strs := strings.Split(heads.Filename, ".")
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		http.Error(w, "Error while reading file", http.StatusInternalServerError)
+
+		return
+	}
+
+	cv := models.CV{
+		ID:            -1,
+		Name:          heads.Filename,
+		Content:       data,
+		FileExtension: strs[len(strs)-1],
+		UpdatedAt:     time.Now(),
+	}
+
+	err = s.manager.UploadCV(r.Context(), cv)
+	if err != nil {
+		http.Error(w, "Error while upload cv", http.StatusInternalServerError)
+
+		return
+	}
+
+	fmt.Fprintf(w, "success upload file %s", heads.Filename)
 }

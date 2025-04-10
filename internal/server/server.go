@@ -29,6 +29,7 @@ const (
 
 type CVManager interface {
 	ListCV(ctx context.Context) ([]models.CV, error)
+	UploadCV(ctx context.Context, cv models.CV) error
 }
 
 type Server struct {
@@ -60,6 +61,7 @@ func (s *Server) WithRoutes() *Server {
 	mux.HandleFunc("GET /ping", s.ping)
 	// mux.HandleFunc("GET /cv", s.htmlCVpreview)
 	mux.HandleFunc("GET /cv", s.htmlAllCV)
+	mux.HandleFunc("POST /cv", s.uploadcv)
 	mux.HandleFunc("GET /", s.htmlIndex)
 
 	s.Handler = mux

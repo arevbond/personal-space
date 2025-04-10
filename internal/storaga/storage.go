@@ -80,3 +80,17 @@ func (s *Storage) ListCV(ctx context.Context) ([]models.CV, error) {
 
 	return result, nil
 }
+
+func (s *Storage) UploadCV(ctx context.Context, cv models.CV) error {
+	query := `INSERT INTO cv (name, content, file_extension)
+				VALUES ($1, $2, $3)`
+
+	args := []any{cv.Name, cv.Content, cv.FileExtension}
+
+	_, err := s.DB.ExecContext(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("can't upload cv: %w", err)
+	}
+
+	return nil
+}
