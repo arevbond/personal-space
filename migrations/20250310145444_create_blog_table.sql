@@ -1,7 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-SELECT
-    'up SQL query';
+SELECT 'up SQL query';
 
 -- +goose StatementEnd
 CREATE TABLE IF NOT EXISTS posts (
@@ -10,11 +9,9 @@ CREATE TABLE IF NOT EXISTS posts (
     description TEXT,
     body TEXT,
     created_at TIMESTAMP
-    WITH
-        TIME ZONE NOT NULL DEFAULT NOW (),
-        updated_at TIMESTAMP
-    WITH
-        TIME ZONE NOT NULL DEFAULT NOW ()
+    WITH TIME ZONE NOT NULL DEFAULT NOW (),
+    updated_at TIMESTAMP
+    WITH TIME ZONE NOT NULL DEFAULT NOW ()
 );
 
 CREATE TABLE IF NOT EXISTS resumes (
@@ -23,15 +20,13 @@ CREATE TABLE IF NOT EXISTS resumes (
     content BYTEA NOT NULL,
     file_extension TEXT,
     last_updated_at TIMESTAMP
-    WITH
-        TIME ZONE NOT NULL DEFAULT NOW (),
-        version INTEGER DEFAULT 1
+    WITH TIME ZONE NOT NULL DEFAULT NOW (),
+    version INTEGER DEFAULT 1
 );
 
 -- +goose Down
 -- +goose StatementBegin
-SELECT
-    'down SQL query';
+SELECT 'down SQL query';
 
 -- +goose StatementEnd
 DROP TABLE IF EXISTS posts;

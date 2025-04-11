@@ -94,3 +94,14 @@ func (s *Storage) UploadResume(ctx context.Context, cv models.Resume) error {
 
 	return nil
 }
+
+func (s *Storage) RemoveResume(ctx context.Context, id int) error {
+	query := `DELETE FROM resumes WHERE id = $1;`
+
+	_, err := s.DB.ExecContext(ctx, query, id)
+	if err != nil {
+		return fmt.Errorf("can't remove resume: %w", err)
+	}
+
+	return nil
+}
