@@ -2,7 +2,7 @@ package models
 
 import "time"
 
-type CV struct {
+type Resume struct {
 	ID            int
 	Name          string
 	Content       []byte

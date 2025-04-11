@@ -30,8 +30,8 @@ const (
 )
 
 type CVManager interface {
-	ListCV(ctx context.Context) ([]models.CV, error)
-	UploadCV(ctx context.Context, cv models.CV) error
+	Resumes(ctx context.Context) ([]models.Resume, error)
+	UploadResume(ctx context.Context, cv models.Resume) error
 }
 
 type Server struct {
@@ -70,8 +70,8 @@ func (s *Server) WithRoutes() *Server {
 	mux.HandleFunc("GET /ping", s.ping)
 
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServerFS(staticFS)))
-	mux.HandleFunc("GET /cv", s.htmlAllCV)
-	mux.HandleFunc("POST /cv", s.uploadcv)
+	mux.HandleFunc("GET /cv", s.htmlResumeList)
+	mux.HandleFunc("POST /cv", s.uploadResume)
 	mux.HandleFunc("GET /cv/{id}", s.htmlCVedit)
 	mux.HandleFunc("GET /", s.htmlIndex)
 

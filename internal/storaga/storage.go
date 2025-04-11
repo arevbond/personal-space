@@ -50,8 +50,8 @@ type CVEntity struct {
 	UpdatedAt     time.Time `db:"last_updated_at"`
 }
 
-func (c CVEntity) toModel() models.CV {
-	return models.CV{
+func (c CVEntity) toModel() models.Resume {
+	return models.Resume{
 		ID:            c.ID,
 		Name:          c.Name,
 		Content:       c.Content,
@@ -60,9 +60,9 @@ func (c CVEntity) toModel() models.CV {
 	}
 }
 
-func (s *Storage) ListCV(ctx context.Context) ([]models.CV, error) {
+func (s *Storage) Resumes(ctx context.Context) ([]models.Resume, error) {
 	query := `SELECT id, name, content, file_extension, last_updated_at 
-				FROM cv
+				FROM resumes
 				ORDER BY last_updated_at DESC;`
 
 	var entities []CVEntity
@@ -72,7 +72,7 @@ func (s *Storage) ListCV(ctx context.Context) ([]models.CV, error) {
 		return nil, fmt.Errorf("can't select all cv: %w", err)
 	}
 
-	result := make([]models.CV, 0, len(entities))
+	result := make([]models.Resume, 0, len(entities))
 
 	for _, entity := range entities {
 		result = append(result, entity.toModel())
@@ -81,8 +81,8 @@ func (s *Storage) ListCV(ctx context.Context) ([]models.CV, error) {
 	return result, nil
 }
 
-func (s *Storage) UploadCV(ctx context.Context, cv models.CV) error {
-	query := `INSERT INTO cv (name, content, file_extension)
+func (s *Storage) UploadResume(ctx context.Context, cv models.Resume) error {
+	query := `INSERT INTO resumes (name, content, file_extension)
 				VALUES ($1, $2, $3)`
 
 	args := []any{cv.Name, cv.Content, cv.FileExtension}

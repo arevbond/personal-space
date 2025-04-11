@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -36,8 +35,8 @@ func (s *Server) htmlCVedit(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) htmlAllCV(w http.ResponseWriter, r *http.Request) {
-	cvs, err := s.manager.ListCV(r.Context())
+func (s *Server) htmlResumeList(w http.ResponseWriter, r *http.Request) {
+	cvs, err := s.manager.Resumes(r.Context())
 	if err != nil {
 		s.log.Error("can't get all cv from db", slog.Any("error", err))
 		http.Error(w, "Error while process db request", http.StatusInternalServerError)
@@ -46,7 +45,7 @@ func (s *Server) htmlAllCV(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tmplData := struct {
-		ListCV []models.CV
+		ListCV []models.Resume
 	}{
 		ListCV: cvs,
 	}
@@ -59,7 +58,7 @@ func (s *Server) htmlAllCV(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) uploadcv(w http.ResponseWriter, r *http.Request) {
+func (s *Server) uploadResume(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, "Error while parsing form", http.StatusInternalServerError)
@@ -85,7 +84,7 @@ func (s *Server) uploadcv(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resume := models.CV{
+	resume := models.Resume{
 		ID:            -1,
 		Name:          heads.Filename,
 		Content:       data,
@@ -93,12 +92,12 @@ func (s *Server) uploadcv(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt:     time.Now(),
 	}
 
-	err = s.manager.UploadCV(r.Context(), resume)
+	err = s.manager.UploadResume(r.Context(), resume)
 	if err != nil {
 		http.Error(w, "Error while upload cv", http.StatusInternalServerError)
 
 		return
 	}
 
-	fmt.Fprintf(w, "success upload file %s", heads.Filename)
+	http.Redirect(w, r, "/cv", http.StatusMovedPermanently)
 }
