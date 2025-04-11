@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"io/fs"
+	"log"
 	"log/slog"
 	"net"
 	"net/http"
@@ -58,10 +60,19 @@ func New(log *slog.Logger, cfg config.Server, manager CVManager) *Server {
 
 func (s *Server) WithRoutes() *Server {
 	mux := http.NewServeMux()
+
+	staticFS, err := fs.Sub(templatesFS, "views/static")
+	if err != nil {
+		// FIXME: убрать глобальную ошибку
+		log.Fatal(err)
+	}
+
 	mux.HandleFunc("GET /ping", s.ping)
-	// mux.HandleFunc("GET /cv", s.htmlCVpreview)
+
+	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServerFS(staticFS)))
 	mux.HandleFunc("GET /cv", s.htmlAllCV)
 	mux.HandleFunc("POST /cv", s.uploadcv)
+	mux.HandleFunc("GET /cv/{id}", s.htmlCVedit)
 	mux.HandleFunc("GET /", s.htmlIndex)
 
 	s.Handler = mux

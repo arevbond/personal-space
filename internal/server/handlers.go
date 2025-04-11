@@ -25,7 +25,9 @@ func (s *Server) htmlIndex(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) htmlCVpreview(w http.ResponseWriter, r *http.Request) {
+func (s *Server) htmlCVedit(w http.ResponseWriter, r *http.Request) {
+	s.log.Debug("cv edit", slog.String("id", r.PathValue("id")))
+
 	if err := s.tmpl.ExecuteTemplate(w, "edit_cv.html", nil); err != nil {
 		s.log.Error("can't render edit cv html", slog.Any("error", err))
 		http.Error(w, "Error while render page", http.StatusInternalServerError)
@@ -83,7 +85,7 @@ func (s *Server) uploadcv(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cv := models.CV{
+	resume := models.CV{
 		ID:            -1,
 		Name:          heads.Filename,
 		Content:       data,
@@ -91,7 +93,7 @@ func (s *Server) uploadcv(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt:     time.Now(),
 	}
 
-	err = s.manager.UploadCV(r.Context(), cv)
+	err = s.manager.UploadCV(r.Context(), resume)
 	if err != nil {
 		http.Error(w, "Error while upload cv", http.StatusInternalServerError)
 
