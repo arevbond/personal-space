@@ -16,7 +16,12 @@ type App struct {
 }
 
 func New(log *slog.Logger, cfg config.Config) (*App, error) {
-	db, err := storage.New(log, cfg.Storage)
+	conn, err := storage.NewConn(cfg.Storage)
+	if err != nil {
+		return nil, fmt.Errorf("can't connect to storage: %w", err)
+	}
+
+	db, err := storage.NewResumeRepo(log, conn)
 	if err != nil {
 		return nil, fmt.Errorf("can't create app: %w", err)
 	}

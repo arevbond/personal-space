@@ -70,9 +70,13 @@ func (s *Server) WithRoutes() *Server {
 	mux.HandleFunc("GET /ping", s.ping)
 
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServerFS(staticFS)))
+
 	mux.HandleFunc("GET /cv", s.htmlResumeList)
 	mux.HandleFunc("POST /cv", s.uploadResume)
 	mux.HandleFunc("GET /cv/{id}", s.htmlCVedit)
+
+	mux.HandleFunc("GET /posts", s.htmlPosts)
+
 	mux.HandleFunc("GET /", s.htmlIndex)
 
 	s.Handler = mux

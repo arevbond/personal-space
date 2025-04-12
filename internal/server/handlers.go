@@ -101,3 +101,11 @@ func (s *Server) uploadResume(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, "/cv", http.StatusMovedPermanently)
 }
+
+func (s *Server) htmlPosts(w http.ResponseWriter, r *http.Request) {
+	if err := s.tmpl.ExecuteTemplate(w, "posts.html", nil); err != nil {
+		http.Error(w, "Error while rendering posts", http.StatusInternalServerError)
+
+		return
+	}
+}
