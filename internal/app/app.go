@@ -7,7 +7,7 @@ import (
 
 	"github.com/arevbond/arevbond-blog/internal/config"
 	"github.com/arevbond/arevbond-blog/internal/server"
-	storage "github.com/arevbond/arevbond-blog/internal/storaga"
+	storage "github.com/arevbond/arevbond-blog/internal/storage"
 )
 
 // App contains all application dependency and launch http server.
