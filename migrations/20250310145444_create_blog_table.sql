@@ -8,20 +8,8 @@ CREATE TABLE IF NOT EXISTS posts (
     title TEXT,
     description TEXT,
     body TEXT,
-    created_at TIMESTAMP
-    WITH TIME ZONE NOT NULL DEFAULT NOW (),
-    updated_at TIMESTAMP
-    WITH TIME ZONE NOT NULL DEFAULT NOW ()
-);
-
-CREATE TABLE IF NOT EXISTS resumes (
-    id SERIAL PRIMARY KEY,
-    name TEXT,
-    content BYTEA NOT NULL,
-    file_extension TEXT,
-    last_updated_at TIMESTAMP
-    WITH TIME ZONE NOT NULL DEFAULT NOW (),
-    version INTEGER DEFAULT 1
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW (),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW ()
 );
 
 -- +goose Down
@@ -30,5 +18,3 @@ SELECT 'down SQL query';
 
 -- +goose StatementEnd
 DROP TABLE IF EXISTS posts;
-
-DROP TABLE IF EXISTS resumes;

@@ -11,9 +11,14 @@ import (
 )
 
 func TestHandlers_ping(t *testing.T) {
-	srv := New(slog.Default(), config.Server{})
+	t.Parallel()
+
+	srv := New(slog.Default(), config.Server{
+		Host: "",
+		Port: 0,
+	}, Config{})
 	handler := http.HandlerFunc(srv.ping)
-	req := httptest.NewRequest("GET", "/ping", http.NoBody)
+	req := httptest.NewRequest(http.MethodGet, "/ping", http.NoBody)
 	rr := httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
 

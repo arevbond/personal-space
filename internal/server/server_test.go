@@ -1,4 +1,4 @@
-package server
+package server_test
 
 import (
 	"context"
@@ -9,18 +9,21 @@ import (
 	"time"
 
 	"github.com/arevbond/arevbond-blog/internal/config"
+	"github.com/arevbond/arevbond-blog/internal/server"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestServer_Run(t *testing.T) {
-	srv := New(slog.Default(), config.Server{
+	t.Parallel()
+
+	srv := server.New(slog.Default(), config.Server{
 		Host: "localhost",
 		Port: 9988,
-	}).WithRoutes()
+	}, server.Config{}).WithRoutes()
 	assert.NotNil(t, srv.Server)
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(t.Context())
 	defer cancel()
 
 	srvFinished := make(chan struct{})
@@ -35,8 +38,10 @@ func TestServer_Run(t *testing.T) {
 	// need for launch server
 	time.Sleep(1e2 * time.Millisecond)
 
+	//nolint: noctx // request for test
 	resp, err := http.Get("http://localhost:9988/ping")
 	require.NoError(t, err)
+	defer resp.Body.Close()
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 

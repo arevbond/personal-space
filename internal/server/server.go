@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"html/template"
 	"io/fs"
-	"log"
 	"log/slog"
 	"net"
 	"net/http"
@@ -18,7 +17,6 @@ import (
 	"time"
 
 	"github.com/arevbond/arevbond-blog/internal/config"
-	"github.com/arevbond/arevbond-blog/internal/models"
 )
 
 //go:embed views/*
@@ -29,19 +27,18 @@ const (
 	readerHeaderTimeout = 5 * time.Second
 )
 
-type CVManager interface {
-	Resumes(ctx context.Context) ([]models.Resume, error)
-	UploadResume(ctx context.Context, cv models.Resume) error
+// Config содержит в себе зависимости для web сервера.
+type Config struct {
 }
 
 type Server struct {
 	*http.Server
-	log     *slog.Logger
-	tmpl    *template.Template
-	manager CVManager
+	Config
+	log  *slog.Logger
+	tmpl *template.Template
 }
 
-func New(log *slog.Logger, cfg config.Server, manager CVManager) *Server {
+func New(log *slog.Logger, cfg config.Server, dependency Config) *Server {
 	addr := net.JoinHostPort(cfg.Host, strconv.Itoa(cfg.Port))
 	//nolint: exhaustruct // default options in http server is good
 	srv := &http.Server{
@@ -51,10 +48,10 @@ func New(log *slog.Logger, cfg config.Server, manager CVManager) *Server {
 	}
 
 	return &Server{
-		Server:  srv,
-		log:     log,
-		tmpl:    template.Must(template.ParseFS(templatesFS, "views/*.html")),
-		manager: manager,
+		Server: srv,
+		Config: dependency,
+		log:    log,
+		tmpl:   template.Must(template.ParseFS(templatesFS, "views/*.html")),
 	}
 }
 
@@ -63,17 +60,14 @@ func (s *Server) WithRoutes() *Server {
 
 	staticFS, err := fs.Sub(templatesFS, "views/static")
 	if err != nil {
-		// FIXME: убрать глобальную ошибку
-		log.Fatal(err)
+		s.log.Error("can't mount static directory", slog.Any("error", err))
+	}
+
+	if staticFS != nil {
+		mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServerFS(staticFS)))
 	}
 
 	mux.HandleFunc("GET /ping", s.ping)
-
-	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServerFS(staticFS)))
-
-	mux.HandleFunc("GET /cv", s.htmlResumeList)
-	mux.HandleFunc("POST /cv", s.uploadResume)
-	mux.HandleFunc("GET /cv/{id}", s.htmlCVedit)
 
 	mux.HandleFunc("GET /posts", s.htmlPosts)
 

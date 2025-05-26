@@ -2,10 +2,11 @@ package config
 
 import (
 	"fmt"
-	"github.com/joho/godotenv"
 	"log"
 	"os"
 	"strconv"
+
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -32,8 +33,9 @@ func New() (Config, error) {
 
 	srvPortString := getEnv("SERVER_PORT", "8080")
 	srvPort, err := strconv.Atoi(srvPortString)
+
 	if err != nil {
-		return Config{}, fmt.Errorf("can't convert server port to int: %v", err)
+		return Config{}, fmt.Errorf("can't convert server port to int: %w", err)
 	}
 
 	server := Server{
@@ -43,8 +45,9 @@ func New() (Config, error) {
 
 	storagePortStr := getEnv("PG_PORT", "5432")
 	storagePort, err := strconv.Atoi(storagePortStr)
+
 	if err != nil {
-		return Config{}, fmt.Errorf("can't convert storage port to int: %v", err)
+		return Config{}, fmt.Errorf("can't convert storage port to int: %w", err)
 	}
 
 	storage := Storage{

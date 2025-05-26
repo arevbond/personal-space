@@ -16,17 +16,12 @@ type App struct {
 }
 
 func New(log *slog.Logger, cfg config.Config) (*App, error) {
-	conn, err := storage.NewConn(cfg.Storage)
+	_, err := storage.NewConn(cfg.Storage)
 	if err != nil {
 		return nil, fmt.Errorf("can't connect to storage: %w", err)
 	}
 
-	db, err := storage.NewResumeRepo(log, conn)
-	if err != nil {
-		return nil, fmt.Errorf("can't create app: %w", err)
-	}
-
-	srv := server.New(log, cfg.Server, db).WithRoutes()
+	srv := server.New(log, cfg.Server, server.Config{}).WithRoutes()
 
 	return &App{
 		Server: srv,
