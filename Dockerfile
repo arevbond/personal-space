@@ -20,8 +20,6 @@ WORKDIR /
 
 COPY --from=build-stage /arevbond /arevbond
 
-COPY /.env /.env
-
 EXPOSE 8080
 
 ENTRYPOINT ["/arevbond"]

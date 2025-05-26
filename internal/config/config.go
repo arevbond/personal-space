@@ -2,45 +2,79 @@ package config
 
 import (
 	"fmt"
+	"github.com/joho/godotenv"
+	"log"
 	"os"
-
-	"gopkg.in/yaml.v3"
+	"strconv"
 )
 
 type Config struct {
-	Server  Server  `yaml:"server"`
-	Storage Storage `yaml:"storage"`
+	Server  Server
+	Storage Storage
 }
 
 type Server struct {
-	Host string `yaml:"host"`
-	Port int    `yaml:"port"`
+	Host string
+	Port int
 }
 
 type Storage struct {
-	Host         string `yaml:"host"`
-	Port         int    `yaml:"port"`
-	User         string `yaml:"user"`
-	Password     string `yaml:"password"`
-	DatabaseName string `yaml:"database_name"`
+	Host         string
+	Port         int
+	User         string
+	Password     string
+	DatabaseName string
 }
 
-func New(configPath string) (Config, error) {
-	if _, err := os.Stat(configPath); err != nil {
-		return Config{}, fmt.Errorf("file '%s' : %w", configPath, err)
-	}
+func New() (Config, error) {
+	// need for dev mode
+	_ = godotenv.Load()
 
-	data, err := os.ReadFile(configPath)
+	srvPortString := getEnv("SERVER_PORT", "8080")
+	srvPort, err := strconv.Atoi(srvPortString)
 	if err != nil {
-		return Config{}, fmt.Errorf("can't read file %s: %w", configPath, err)
+		return Config{}, fmt.Errorf("can't convert server port to int: %v", err)
 	}
 
-	var config Config
+	server := Server{
+		Host: getEnv("SERVER_HOST", "0.0.0.0"),
+		Port: srvPort,
+	}
 
-	err = yaml.Unmarshal(data, &config)
+	storagePortStr := getEnv("PG_PORT", "5432")
+	storagePort, err := strconv.Atoi(storagePortStr)
 	if err != nil {
-		return Config{}, fmt.Errorf("can't unmarshall data to config: %w", err)
+		return Config{}, fmt.Errorf("can't convert storage port to int: %v", err)
 	}
 
-	return config, nil
+	storage := Storage{
+		Host:         getEnv("PG_HOST", "blog-database"),
+		Port:         storagePort,
+		User:         mustGetEnv("PG_USERNAME"),
+		Password:     mustGetEnv("PG_PASSWORD"),
+		DatabaseName: mustGetEnv("PG_DBNAME"),
+	}
+
+	return Config{
+		Server:  server,
+		Storage: storage,
+	}, nil
+}
+
+func getEnv(key, fallback string) string {
+	val := os.Getenv(key)
+	if val == "" {
+		return fallback
+	}
+
+	return val
+}
+
+func mustGetEnv(key string) string {
+	val := os.Getenv(key)
+	if val == "" {
+		log.Fatalf("required env var %s is not set", key)
+	}
+
+	return val
 }

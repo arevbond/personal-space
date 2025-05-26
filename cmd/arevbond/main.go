@@ -13,14 +13,12 @@ import (
 	"github.com/lmittmann/tint"
 )
 
-var configPath = flag.String("config", "configs/application.yaml", "path to application config")
-
 func main() {
 	flag.Parse()
 
 	logger := setupPrettyLogger()
 
-	cfg, err := config.New(*configPath)
+	cfg, err := config.New()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -29,14 +27,14 @@ func main() {
 
 	logger.Info("application started")
 
-	app, err := app.New(logger, cfg)
+	application, err := app.New(logger, cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	ctx := context.Background()
 
-	if err := app.Run(ctx); err != nil {
+	if err = application.Run(ctx); err != nil {
 		panic(err)
 	}
 }
@@ -52,13 +50,3 @@ func setupPrettyLogger() *slog.Logger {
 
 	return logger
 }
-
-// func setupLogger() *slog.Logger {
-// 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-// 		AddSource:   false,
-// 		Level:       slog.LevelDebug,
-// 		ReplaceAttr: nil,
-// 	}))
-
-// 	return logger
-// }
