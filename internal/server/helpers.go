@@ -1,0 +1,18 @@
+package server
+
+import (
+	"log/slog"
+	"net/http"
+)
+
+func (s *Server) renderTemplate(w http.ResponseWriter, templateName string, data any) {
+	if err := s.tmpl.ExecuteTemplate(w, templateName, data); err != nil {
+		s.log.Error("can't render template",
+			slog.String("template name", templateName),
+			slog.Any("error", err))
+
+		http.Error(w, "can't execute template", http.StatusInternalServerError)
+
+		return
+	}
+}

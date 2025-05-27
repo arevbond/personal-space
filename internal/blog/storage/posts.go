@@ -34,3 +34,19 @@ func (p *Posts) All(ctx context.Context, limit int, offset int) ([]*domain.Post,
 
 	return posts, nil
 }
+
+func (p *Posts) Find(ctx context.Context, postID int) (*domain.Post, error) {
+	query := `
+		SELECT id, title, description, body, created_at, updated_at
+		FROM posts
+		WHERE id = $1;`
+
+	var post domain.Post
+
+	err := p.DB.GetContext(ctx, &post, query, postID)
+	if err != nil {
+		return nil, fmt.Errorf("can't get post from db: %w", err)
+	}
+
+	return &post, nil
+}

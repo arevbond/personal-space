@@ -30,6 +30,7 @@ const (
 
 type Blog interface {
 	Posts(ctx context.Context, limit, offset int) ([]*domain.Post, error)
+	Post(ctx context.Context, id int) (*domain.Post, error)
 }
 
 // Services содержит в себе зависимости для web сервера.
