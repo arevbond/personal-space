@@ -79,7 +79,7 @@ func (s *Server) WithRoutes() *Server {
 }
 
 func (s *Server) Run(ctx context.Context) error {
-	idleConnsClosed := make(chan struct{})
+	idleConnClosed := make(chan struct{})
 
 	go func() {
 		signals := make(chan os.Signal, 1)
@@ -94,7 +94,7 @@ func (s *Server) Run(ctx context.Context) error {
 			s.log.Error("graceful shutdown http server", slog.Any("error", err))
 		}
 
-		close(idleConnsClosed)
+		close(idleConnClosed)
 	}()
 
 	if err := s.ListenAndServe(); err != nil {
@@ -105,7 +105,7 @@ func (s *Server) Run(ctx context.Context) error {
 		}
 	}
 
-	<-idleConnsClosed
+	<-idleConnClosed
 
 	return nil
 }
