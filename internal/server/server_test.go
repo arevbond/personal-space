@@ -20,7 +20,8 @@ func TestServer_Run(t *testing.T) {
 	srv := server.New(slog.Default(), config.Server{
 		Host: "localhost",
 		Port: 9988,
-	}, server.Config{}).WithRoutes()
+	}, server.Services{})
+	srv.ConfigureRoutes()
 	assert.NotNil(t, srv.Server)
 
 	ctx, cancel := context.WithCancel(t.Context())

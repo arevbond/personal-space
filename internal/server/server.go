@@ -16,6 +16,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/arevbond/arevbond-blog/internal/blog/domain"
 	"github.com/arevbond/arevbond-blog/internal/config"
 )
 
@@ -27,18 +28,23 @@ const (
 	readerHeaderTimeout = 5 * time.Second
 )
 
-// Config содержит в себе зависимости для web сервера.
-type Config struct {
+type Blog interface {
+	Posts(ctx context.Context, limit, offset int) ([]*domain.Post, error)
+}
+
+// Services содержит в себе зависимости для web сервера.
+type Services struct {
+	Blog Blog
 }
 
 type Server struct {
 	*http.Server
-	Config
+	Services
 	log  *slog.Logger
 	tmpl *template.Template
 }
 
-func New(log *slog.Logger, cfg config.Server, dependency Config) *Server {
+func New(log *slog.Logger, cfg config.Server, dependency Services) *Server {
 	addr := net.JoinHostPort(cfg.Host, strconv.Itoa(cfg.Port))
 	//nolint: exhaustruct // default options in http server is good
 	srv := &http.Server{
@@ -48,14 +54,15 @@ func New(log *slog.Logger, cfg config.Server, dependency Config) *Server {
 	}
 
 	return &Server{
-		Server: srv,
-		Config: dependency,
-		log:    log,
-		tmpl:   template.Must(template.ParseFS(templatesFS, "views/*.html")),
+		Server:   srv,
+		Services: dependency,
+		log:      log,
+		tmpl: template.Must(template.ParseFS(templatesFS,
+			"views/*.html", "views/blog/*.html")),
 	}
 }
 
-func (s *Server) WithRoutes() *Server {
+func (s *Server) ConfigureRoutes() {
 	mux := http.NewServeMux()
 
 	staticFS, err := fs.Sub(templatesFS, "views/static")
@@ -68,14 +75,11 @@ func (s *Server) WithRoutes() *Server {
 	}
 
 	mux.HandleFunc("GET /ping", s.ping)
-
-	mux.HandleFunc("GET /posts", s.htmlPosts)
-
 	mux.HandleFunc("GET /", s.htmlIndex)
 
-	s.Handler = mux
+	s.registerBlogRoutes(mux)
 
-	return s
+	s.Handler = mux
 }
 
 func (s *Server) Run(ctx context.Context) error {

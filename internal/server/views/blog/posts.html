@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    {{ template "heads.html" }}
+    <title>Arevbond Blog</title>
+</head>
+<body>
+<main class="container my-5">
+    <h2 class="mb-4">Записи в блоге</h2>
+
+    {{ range .Posts }}
+    <div class="card mb-3 shadow-sm">
+        <div class="card-body">
+            <h3 class="card-title mb-2">{{ .Title }}</h3>
+            <p class="card-text text-muted mb-1">{{ .Description }}</p>
+            <p class="card-text">
+                <small class="text-muted">Опубликовано: {{ .CreatedAt.Format "02.01.2006 15:04" }}</small>
+            </p>
+            <a href="/post/{{ .ID }}" class="btn btn-sm btn-outline-primary">Читать</a>
+        </div>
+    </div>
+    {{ else }}
+    <p>Пока нет ни одного поста.</p>
+    {{ end }}
+</main>
+</body>
+</html>
