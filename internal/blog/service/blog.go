@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/arevbond/arevbond-blog/internal/blog/domain"
 )
@@ -11,6 +14,7 @@ import (
 type PostRepository interface {
 	All(ctx context.Context, limit int, offset int) ([]*domain.Post, error)
 	Find(ctx context.Context, id int) (*domain.Post, error)
+	Create(ctx context.Context, post *domain.Post) error
 }
 
 type Blog struct {
@@ -38,4 +42,27 @@ func (b *Blog) Post(ctx context.Context, id int) (*domain.Post, error) {
 	}
 
 	return post, nil
+}
+
+func (b *Blog) CreatePost(ctx context.Context, params domain.PostParams) (int, error) {
+	if params.Title == "" {
+		params.Title = strings.TrimSuffix(params.Filename, filepath.Ext(params.Filename))
+	}
+
+	post := &domain.Post{
+		ID:          0,
+		Title:       params.Title,
+		Description: params.Description,
+		Content:     params.Content,
+		Extension:   filepath.Ext(params.Filename),
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}
+
+	err := b.PostsRepo.Create(ctx, post)
+	if err != nil {
+		return -1, fmt.Errorf("can't create post: %w", err)
+	}
+
+	return post.ID, nil
 }

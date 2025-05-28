@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    {{ template "heads.html" }}
+    <title>Новая запись — Arevbond Blog</title>
+</head>
+<body>
+<main class="container">
+    <form action="/blog/post" method="POST" enctype="multipart/form-data" class="form-control mb-3">
+        <label for="title">Название</label>
+        <input id="title" class="form-control mb-3" name="title" type="text" placeholder="" />
+        <textarea class="form-control mb-3" name="description" rows="2" placeholder="Краткое описание (опционально)"></textarea>
+        <div class="mb-3">
+            <label for="formFile" class="form-label">Содержимое в markdown</label>
+            <input class="form-control" type="file" id="formFile" name="file"  accept=".md" required>
+        </div>
+        <button type="submit" class="btn btn-outline-dark submit-btn">Сохранить</button>
+    </form>
+
+    <a href="/blog/posts" class="btn btn-outline-secondary">← Назад ко всем постам</a>
+</main>
+</body>
+</html>

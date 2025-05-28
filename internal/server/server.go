@@ -16,7 +16,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/arevbond/arevbond-blog/internal/blog/domain"
 	"github.com/arevbond/arevbond-blog/internal/config"
 )
 
@@ -27,11 +26,6 @@ const (
 	shutdownTimeout     = 5 * time.Second
 	readerHeaderTimeout = 5 * time.Second
 )
-
-type Blog interface {
-	Posts(ctx context.Context, limit, offset int) ([]*domain.Post, error)
-	Post(ctx context.Context, id int) (*domain.Post, error)
-}
 
 // Services содержит в себе зависимости для web сервера.
 type Services struct {

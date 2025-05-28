@@ -7,7 +7,8 @@ CREATE TABLE IF NOT EXISTS posts (
     id SERIAL PRIMARY KEY,
     title TEXT,
     description TEXT,
-    body TEXT,
+    content BYTEA,
+    extension VARCHAR,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW (),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW ()
 );
