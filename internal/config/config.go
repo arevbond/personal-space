@@ -10,8 +10,10 @@ import (
 )
 
 type Config struct {
-	Server  Server
-	Storage Storage
+	Env        string // "local", "prod"
+	AdminToken string // need for authentication
+	Server     Server
+	Storage    Storage
 }
 
 type Server struct {
@@ -59,8 +61,10 @@ func New() (Config, error) {
 	}
 
 	return Config{
-		Server:  server,
-		Storage: storage,
+		Env:        getEnv("ENV", "local"),
+		AdminToken: mustGetEnv("ADMIN_TOKEN"),
+		Server:     server,
+		Storage:    storage,
 	}, nil
 }
 

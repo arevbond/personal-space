@@ -25,7 +25,7 @@ func main() {
 
 	logger.Debug("http server", slog.Any("config", cfg.Server))
 
-	logger.Info("application started")
+	logger.Info("application started", slog.String("Env", cfg.Env))
 
 	application, err := app.New(logger, cfg)
 	if err != nil {
