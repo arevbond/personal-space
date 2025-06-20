@@ -3,12 +3,11 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/arevbond/arevbond-blog/internal/service/blog/domain"
 	"log/slog"
 	"path/filepath"
 	"strings"
 	"time"
-
-	"github.com/arevbond/arevbond-blog/internal/blog/domain"
 )
 
 type PostRepository interface {

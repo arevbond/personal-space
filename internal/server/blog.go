@@ -3,12 +3,11 @@ package server
 import (
 	"context"
 	"fmt"
+	"github.com/arevbond/arevbond-blog/internal/service/blog/domain"
 	"io"
 	"log/slog"
 	"net/http"
 	"strconv"
-
-	"github.com/arevbond/arevbond-blog/internal/blog/domain"
 )
 
 type Blog interface {

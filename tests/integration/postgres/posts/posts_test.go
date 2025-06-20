@@ -3,6 +3,8 @@ package posts
 import (
 	"context"
 	"fmt"
+	"github.com/arevbond/arevbond-blog/internal/service/blog/domain"
+	"github.com/arevbond/arevbond-blog/internal/service/blog/storage"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -10,8 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/arevbond/arevbond-blog/internal/blog/domain"
-	"github.com/arevbond/arevbond-blog/internal/blog/storage"
 	"github.com/arevbond/arevbond-blog/internal/config"
 	"github.com/arevbond/arevbond-blog/internal/db"
 	"github.com/jmoiron/sqlx"

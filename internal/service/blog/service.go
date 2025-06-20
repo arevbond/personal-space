@@ -1,10 +1,10 @@
 package blog
 
 import (
+	"github.com/arevbond/arevbond-blog/internal/service/blog/service"
+	"github.com/arevbond/arevbond-blog/internal/service/blog/storage"
 	"log/slog"
 
-	"github.com/arevbond/arevbond-blog/internal/blog/service"
-	"github.com/arevbond/arevbond-blog/internal/blog/storage"
 	"github.com/jmoiron/sqlx"
 )
 

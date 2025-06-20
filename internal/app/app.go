@@ -3,9 +3,9 @@ package app
 import (
 	"context"
 	"fmt"
+	"github.com/arevbond/arevbond-blog/internal/service/blog"
 	"log/slog"
 
-	"github.com/arevbond/arevbond-blog/internal/blog"
 	"github.com/arevbond/arevbond-blog/internal/config"
 	"github.com/arevbond/arevbond-blog/internal/db"
 	"github.com/arevbond/arevbond-blog/internal/server"
