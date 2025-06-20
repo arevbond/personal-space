@@ -3,6 +3,13 @@ package posts
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"os"
+	"path/filepath"
+	"strconv"
+	"testing"
+	"time"
+
 	"github.com/arevbond/arevbond-blog/internal/blog/domain"
 	"github.com/arevbond/arevbond-blog/internal/blog/storage"
 	"github.com/arevbond/arevbond-blog/internal/config"
@@ -13,12 +20,6 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
-	"log/slog"
-	"os"
-	"path/filepath"
-	"strconv"
-	"testing"
-	"time"
 )
 
 type StorageSuite struct {

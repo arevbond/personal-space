@@ -3,9 +3,10 @@ package storage
 import (
 	"context"
 	"fmt"
+	"log/slog"
+
 	"github.com/arevbond/arevbond-blog/internal/blog/domain"
 	"github.com/jmoiron/sqlx"
-	"log/slog"
 )
 
 type Posts struct {

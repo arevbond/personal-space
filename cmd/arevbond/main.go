@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"io"
 	"log"
 	"log/slog"
 	"os"
@@ -16,12 +17,12 @@ import (
 func main() {
 	flag.Parse()
 
-	logger := setupPrettyLogger()
-
 	cfg, err := config.New()
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	logger := mustSetupLogger(cfg.Env)
 
 	logger.Debug("http server", slog.Any("config", cfg.Server))
 
@@ -37,6 +38,28 @@ func main() {
 	if err = application.Run(ctx); err != nil {
 		panic(err)
 	}
+}
+
+func mustSetupLogger(env string) *slog.Logger {
+	switch env {
+	case config.EnvLocal:
+		return setupPrettyLogger()
+	case config.EnvProd:
+		return setupJSONLogger(os.Stdout)
+	default:
+		log.Fatalf("can't setup logger: unknown environment: %s", env)
+	}
+
+	return nil
+}
+
+func setupJSONLogger(writers ...io.Writer) *slog.Logger {
+	//nolint: exhaustruct // default slog handler
+	logger := slog.New(slog.NewJSONHandler(io.MultiWriter(writers...), &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	}))
+
+	return logger
 }
 
 func setupPrettyLogger() *slog.Logger {

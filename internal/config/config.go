@@ -9,6 +9,11 @@ import (
 	"github.com/joho/godotenv"
 )
 
+const (
+	EnvLocal = "local"
+	EnvProd  = "prod"
+)
+
 type Config struct {
 	Env        string // "local", "prod"
 	AdminToken string // need for authentication
@@ -61,7 +66,7 @@ func New() (Config, error) {
 	}
 
 	return Config{
-		Env:        getEnv("ENV", "local"),
+		Env:        getEnv("ENV", EnvLocal),
 		AdminToken: mustGetEnv("ADMIN_TOKEN"),
 		Server:     server,
 		Storage:    storage,
