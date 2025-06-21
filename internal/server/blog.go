@@ -3,11 +3,12 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/arevbond/arevbond-blog/internal/service/blog/domain"
 	"io"
 	"log/slog"
 	"net/http"
 	"strconv"
+
+	"github.com/arevbond/arevbond-blog/internal/service/blog/domain"
 )
 
 type Blog interface {
@@ -40,12 +41,7 @@ func (s *Server) htmlPosts(w http.ResponseWriter, r *http.Request) {
 		Posts: posts,
 	}
 
-	if err = s.tmpl.ExecuteTemplate(w, "posts.html", tmplData); err != nil {
-		s.log.Error("htmlPosts", slog.Any("error", err))
-		http.Error(w, "can't render posts.html", http.StatusInternalServerError)
-
-		return
-	}
+	s.renderTemplate(w, "posts.html", tmplData)
 }
 
 func (s *Server) htmlPost(w http.ResponseWriter, r *http.Request) {

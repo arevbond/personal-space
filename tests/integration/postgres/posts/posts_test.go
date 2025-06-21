@@ -3,14 +3,15 @@ package posts
 import (
 	"context"
 	"fmt"
-	"github.com/arevbond/arevbond-blog/internal/service/blog/domain"
-	"github.com/arevbond/arevbond-blog/internal/service/blog/storage"
 	"log/slog"
 	"os"
 	"path/filepath"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/arevbond/arevbond-blog/internal/service/blog/domain"
+	"github.com/arevbond/arevbond-blog/internal/service/blog/storage"
 
 	"github.com/arevbond/arevbond-blog/internal/config"
 	"github.com/arevbond/arevbond-blog/internal/db"

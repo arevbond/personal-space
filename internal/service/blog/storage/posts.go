@@ -3,9 +3,9 @@ package storage
 import (
 	"context"
 	"fmt"
-	"github.com/arevbond/arevbond-blog/internal/service/blog/domain"
 	"log/slog"
 
+	"github.com/arevbond/arevbond-blog/internal/service/blog/domain"
 	"github.com/jmoiron/sqlx"
 )
 

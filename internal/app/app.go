@@ -3,12 +3,12 @@ package app
 import (
 	"context"
 	"fmt"
-	"github.com/arevbond/arevbond-blog/internal/service/blog"
 	"log/slog"
 
 	"github.com/arevbond/arevbond-blog/internal/config"
 	"github.com/arevbond/arevbond-blog/internal/db"
 	"github.com/arevbond/arevbond-blog/internal/server"
+	"github.com/arevbond/arevbond-blog/internal/service/blog"
 )
 
 // App contains all application dependency and launch http server.

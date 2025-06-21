@@ -73,6 +73,7 @@ func (s *Server) ConfigureRoutes() {
 	mux.HandleFunc("GET /", s.htmlIndex)
 
 	s.registerBlogRoutes(mux)
+	s.registerAuthRoutes(mux)
 
 	s.Handler = mux
 }

@@ -6,6 +6,8 @@ import (
 )
 
 func (s *Server) renderTemplate(w http.ResponseWriter, templateName string, data any) {
+	s.log.Debug("render template", slog.String("name", templateName))
+
 	if err := s.tmpl.ExecuteTemplate(w, templateName, data); err != nil {
 		s.log.Error("can't render template",
 			slog.String("template name", templateName),
