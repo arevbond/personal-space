@@ -8,6 +8,7 @@ import (
 	"github.com/arevbond/arevbond-blog/internal/config"
 	"github.com/arevbond/arevbond-blog/internal/db"
 	"github.com/arevbond/arevbond-blog/internal/server"
+	"github.com/arevbond/arevbond-blog/internal/service/auth"
 	"github.com/arevbond/arevbond-blog/internal/service/blog"
 )
 
@@ -23,8 +24,9 @@ func New(log *slog.Logger, cfg config.Config) (*App, error) {
 	}
 
 	blogService := blog.NewBlogModule(log, conn)
+	authService := auth.NewAuthModule(log, cfg.AdminToken)
 
-	srv := server.New(log, cfg.Server, server.Services{Blog: blogService})
+	srv := server.New(log, cfg.Server, server.Services{Blog: blogService, Auth: authService})
 	srv.ConfigureRoutes()
 
 	return &App{

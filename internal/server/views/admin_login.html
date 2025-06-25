@@ -2,14 +2,19 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    {{ template "heads.html" }}
     <title>Login</title>
 </head>
 <body>
 <main class="container">
-    <h1>Enter token:</h1>
+    <form action="">
+        <div class="mb-3">
+            <label for="adminToken" class="form-label">Admin token</label>
+            <input type="password" class="form-control" id="adminToken" name="token" aria-describedby="tokenHelp">
+            <div id="tokenHelp" class="form-text">Never share token with anyone else.</div>
+        </div>
+        <button hx-post="/verify-token" hx-swap="none" type="submit" class="btn btn-primary">Submit</button>
+    </form>
 </main>
 
 </body>

@@ -30,6 +30,7 @@ const (
 // Services содержит в себе зависимости для web сервера.
 type Services struct {
 	Blog Blog
+	Auth Auth
 }
 
 type Server struct {
