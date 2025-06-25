@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS posts (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW (),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW ()
 );
+-- my first table
 
 -- +goose Down
 -- +goose StatementBegin
