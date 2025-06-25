@@ -30,6 +30,8 @@ func (s *Server) htmlPosts(w http.ResponseWriter, r *http.Request) {
 
 	posts, err := s.Blog.Posts(r.Context(), pageLimit, 0)
 	if err != nil {
+		s.log.Error("can't get posts from db", slog.Any("erorr", err))
+		
 		http.Error(w, "can't get posts from db", http.StatusInternalServerError)
 
 		return
