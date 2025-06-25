@@ -18,14 +18,14 @@ type Blog interface {
 }
 
 func (s *Server) registerBlogRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("GET /blog/posts", s.htmlPosts)
-	mux.HandleFunc("GET /blog/post/{id}", s.htmlPost)
+	mux.HandleFunc("GET /blog/posts", s.postsPage)
+	mux.HandleFunc("GET /blog/post/{id}", s.postPage)
 
-	mux.HandleFunc("GET /blog/post/form", s.htmlCreatePost)
+	mux.HandleFunc("GET /blog/post/form", s.createPostPage)
 	mux.HandleFunc("POST /blog/post", s.createPost)
 }
 
-func (s *Server) htmlPosts(w http.ResponseWriter, r *http.Request) {
+func (s *Server) postsPage(w http.ResponseWriter, r *http.Request) {
 	const pageLimit = 10
 
 	posts, err := s.Blog.Posts(r.Context(), pageLimit, 0)
@@ -46,7 +46,7 @@ func (s *Server) htmlPosts(w http.ResponseWriter, r *http.Request) {
 	s.renderTemplate(w, "posts.html", tmplData)
 }
 
-func (s *Server) htmlPost(w http.ResponseWriter, r *http.Request) {
+func (s *Server) postPage(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 
 	postID, err := strconv.Atoi(idStr)
@@ -70,7 +70,7 @@ func (s *Server) htmlPost(w http.ResponseWriter, r *http.Request) {
 	s.renderTemplate(w, "post.html", post)
 }
 
-func (s *Server) htmlCreatePost(w http.ResponseWriter, r *http.Request) {
+func (s *Server) createPostPage(w http.ResponseWriter, r *http.Request) {
 	s.renderTemplate(w, "create_post.html", nil)
 }
 
