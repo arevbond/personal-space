@@ -65,7 +65,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
 
-    steps:  
+    steps:
       - name: Get code from repository
         uses: actions/checkout@v4
 
