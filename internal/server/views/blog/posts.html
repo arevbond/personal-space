@@ -6,9 +6,10 @@
     <title>Arevbond Blog</title>
 </head>
 <body>
-<main class="container my-5">
-    <h2 class="mb-4">Записи в блоге</h2>
+<main class="container">
+    {{ template "navbar.html" }}
 
+    <h2 class="mb-4">Записи в блоге</h2>
     {{ range .Posts }}
     <div class="card mb-3 shadow-sm">
         <div class="card-body">

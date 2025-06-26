@@ -6,7 +6,9 @@
     <title>{{ .Title }} — Arevbond Blog</title>
 </head>
 <body>
-<main class="container my-5">
+<main class="container">
+    {{ template "navbar.html" }}
+
     <article class="mb-5">
         <h1 class="mb-3">{{ .Title }}</h1>
         <p class="text-muted">
