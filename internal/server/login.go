@@ -33,8 +33,8 @@ func (s *Server) verifyAdminToken(w http.ResponseWriter, r *http.Request) {
 	if s.Auth.IsAdminToken(incomeToken) {
 		setTokenCookie(w, "JWT_TOKEN")
 		s.log.Debug("success set cookie")
-	} else {
-		s.log.Debug("invalid income token")
+
+		s.renderTemplate(w, "success_admin_login", nil)
 	}
 }
 

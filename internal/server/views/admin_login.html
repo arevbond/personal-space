@@ -14,9 +14,18 @@
             <input type="password" class="form-control" id="adminToken" name="token" aria-describedby="tokenHelp">
             <div id="tokenHelp" class="form-text">Never share token with anyone else.</div>
         </div>
-        <button hx-post="/verify-token" hx-swap="none" type="submit" class="btn btn-primary">Submit</button>
+        <button hx-post="/verify-token" hx-swap="innerHTML" hx-target="#login-message" type="submit" class="btn btn-primary">Submit</button>
     </form>
+    <div id="login-message" class="mt-3">
+
+    </div>
 </main>
 
 </body>
 </html>
+
+{{ define "success_admin_login" }}
+<div>
+    <p class="text-success">Valid admin token</p>
+</div>
+{{ end }}
