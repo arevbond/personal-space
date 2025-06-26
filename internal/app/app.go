@@ -24,7 +24,7 @@ func New(log *slog.Logger, cfg config.Config) (*App, error) {
 	}
 
 	blogService := blog.NewBlogModule(log, conn)
-	authService := auth.NewAuthModule(log, cfg.AdminToken)
+	authService := auth.NewAuthModule(log, cfg.AdminToken, cfg.SecretKeyJWT)
 
 	srv := server.New(log, cfg.Server, server.Services{Blog: blogService, Auth: authService})
 	srv.ConfigureRoutes()

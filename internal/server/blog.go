@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/arevbond/arevbond-blog/internal/middleware"
 	"github.com/arevbond/arevbond-blog/internal/service/blog/domain"
 )
 
@@ -18,19 +19,21 @@ type Blog interface {
 }
 
 func (s *Server) registerBlogRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("GET /blog/posts", s.postsPage)
+	mux.Handle("GET /blog/posts", middleware.OptionalAuth(s.Auth, s.log)(http.HandlerFunc(s.postsPage)))
 	mux.HandleFunc("GET /blog/post/{id}", s.postPage)
 
-	mux.HandleFunc("GET /blog/post/form", s.createPostPage)
-	mux.HandleFunc("POST /blog/post", s.createPost)
+	mux.Handle("GET /blog/post/form", middleware.RequireAuth(s.Auth, s.log)(http.HandlerFunc(s.createPostPage)))
+	mux.Handle("POST /blog/post", middleware.RequireAuth(s.Auth, s.log)(http.HandlerFunc(s.createPost)))
 }
 
 func (s *Server) postsPage(w http.ResponseWriter, r *http.Request) {
+	isAdmin := r.Context().Value(middleware.IsAdminKey) != nil
+
 	const pageLimit = 10
 
 	posts, err := s.Blog.Posts(r.Context(), pageLimit, 0)
 	if err != nil {
-		s.log.Error("can't get posts from db", slog.Any("erorr", err))
+		s.log.Error("can't get posts from db", slog.Any("error", err))
 
 		http.Error(w, "can't get posts from db", http.StatusInternalServerError)
 
@@ -38,9 +41,11 @@ func (s *Server) postsPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tmplData := struct {
-		Posts []*domain.Post
+		Posts   []*domain.Post
+		IsAdmin bool
 	}{
-		Posts: posts,
+		Posts:   posts,
+		IsAdmin: isAdmin,
 	}
 
 	s.renderTemplate(w, "posts.html", tmplData)

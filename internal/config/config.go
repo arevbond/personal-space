@@ -15,10 +15,11 @@ const (
 )
 
 type Config struct {
-	Env        string // "local", "prod"
-	AdminToken string // need for authentication
-	Server     Server
-	Storage    Storage
+	Env          string // "local", "prod"
+	AdminToken   string // need for authentication
+	SecretKeyJWT string
+	Server       Server
+	Storage      Storage
 }
 
 type Server struct {
@@ -66,10 +67,11 @@ func New() (Config, error) {
 	}
 
 	return Config{
-		Env:        getEnv("ENV", EnvLocal),
-		AdminToken: mustGetEnv("ADMIN_TOKEN"),
-		Server:     server,
-		Storage:    storage,
+		Env:          getEnv("ENV", EnvLocal),
+		AdminToken:   mustGetEnv("ADMIN_TOKEN"),
+		SecretKeyJWT: mustGetEnv("SECRET_KEY_JWT"),
+		Server:       server,
+		Storage:      storage,
 	}, nil
 }
 

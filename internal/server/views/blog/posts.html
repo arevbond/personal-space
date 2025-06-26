@@ -25,7 +25,9 @@
     <p>Пока нет ни одного поста.</p>
     {{ end }}
 
-    <a href="/blog/post/form">Опубликовать пост</a>
+    {{ if .IsAdmin }}
+        <a href="/blog/post/form">Опубликовать пост</a>
+    {{ end }}
 </main>
 </body>
 </html>

@@ -7,6 +7,8 @@ import (
 
 type Auth interface {
 	IsAdminToken(token string) bool
+	NewJWT() (string, error)
+	VerifyJWT(tokenStr string) (bool, error)
 }
 
 func (s *Server) registerAuthRoutes(mux *http.ServeMux) {
@@ -28,10 +30,20 @@ func (s *Server) verifyAdminToken(w http.ResponseWriter, r *http.Request) {
 
 	incomeToken := r.Form.Get("token")
 
-	s.log.Debug("income admin token", slog.String("token", incomeToken))
-
 	if s.Auth.IsAdminToken(incomeToken) {
-		setTokenCookie(w, "JWT_TOKEN")
+		var token string
+		token, err = s.Auth.NewJWT()
+
+		if err != nil {
+			s.log.Error("can't create jwt", slog.Any("error", err))
+
+			http.Error(w, "can't create jwt", http.StatusInternalServerError)
+
+			return
+		}
+
+		setTokenCookie(w, token)
+
 		s.log.Debug("success set cookie")
 
 		s.renderTemplate(w, "success_admin_login", nil)
@@ -39,15 +51,14 @@ func (s *Server) verifyAdminToken(w http.ResponseWriter, r *http.Request) {
 }
 
 func setTokenCookie(w http.ResponseWriter, token string) {
-	// время жизни куки в секундах
-	const ttl = 3600
+	const TokenTTL = 3600 // 1 hour
 
 	//nolint: exhaustruct // default cookie struct
 	cookie := http.Cookie{
 		Name:     "token",
 		Value:    token,
 		Path:     "/",
-		MaxAge:   ttl,
+		MaxAge:   TokenTTL,
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteLaxMode,
