@@ -6,39 +6,71 @@
     <title>Arevbond Blog</title>
 </head>
 <body>
-<main class="container">
+<main class="container py-4">
     {{ template "navbar.html" }}
 
-    <h2 class="mb-4">Записи в блоге</h2>
-    {{ range .Posts }}
-    <div class="card mb-3 shadow-sm">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-                <h3 class="card-title mb-0">{{ .Title }}</h3>
-                {{ if $.IsAdmin }}
-                <div>
-                    {{ if .IsPublished }}
-                    <span class="badge bg-success">Опубликовано</span>
-                    {{ else }}
-                    <span class="badge bg-secondary">Скрыто</span>
-                    {{ end }}
+    <div class="row">
+        <!-- Основная колонка с постами -->
+        <div class="col-md-8">
+            {{ range .Posts }}
+            <div class="card mb-3 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <a href="/blog/posts/{{ .ID }}" class="text-decoration-none text-reset"><h3 class="card-title mb-0">{{ .Title }}</h3></a>
+                        {{ if $.IsAdmin }}
+                        <div>
+                            {{ if .IsPublished }}
+                            <span class="badge bg-success">Опубликовано</span>
+                            {{ else }}
+                            <span class="badge bg-secondary">Скрыто</span>
+                            {{ end }}
+                        </div>
+                        {{ end }}
+                    </div>
+                    <p class="card-text">
+                        <small class="text-muted">{{ .CreatedAt.Format "02 Jan 2006 15:04" }}</small>
+                    </p>
+                    <p class="card-text text-muted">{{ .Description }}</p>
+                    <a href="/blog/posts/{{ .ID }}" class="btn btn-sm btn-outline-primary">Читать</a>
                 </div>
-                {{ end }}
             </div>
-            <p class="card-text text-muted mb-1">{{ .Description }}</p>
-            <p class="card-text">
-                <small class="text-muted">Создано: {{ .CreatedAt.Format "02.01.2006 15:04" }}</small>
-            </p>
-            <a href="/blog/posts/{{ .ID }}" class="btn btn-sm btn-outline-primary">Читать</a>
+            {{ else }}
+            <p>Пока нет ни одного поста.</p>
+            {{ end }}
+
+            {{ if .IsAdmin }}
+            <a href="/blog/posts/form" class="btn btn-sm btn-success mt-3">Опубликовать пост</a>
+            {{ end }}
+        </div>
+
+        <!-- Боковая колонка -->
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-header bg-light">
+                    <strong>Категории</strong>
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">Технологии</li>
+                    <li class="list-group-item">Разработка</li>
+                    <li class="list-group-item">Личное</li>
+                    <li class="list-group-item">Наука</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-light">
+                    <strong>Теги</strong>
+                </div>
+                <div class="card-body">
+                    <span class="badge bg-primary me-1 mb-1">Go</span>
+                    <span class="badge bg-secondary me-1 mb-1">JavaScript</span>
+                    <span class="badge bg-info text-dark me-1 mb-1">DevOps</span>
+                    <span class="badge bg-warning text-dark me-1 mb-1">AI</span>
+                    <span class="badge bg-success me-1 mb-1">Life</span>
+                </div>
+            </div>
         </div>
     </div>
-    {{ else }}
-    <p>Пока нет ни одного поста.</p>
-    {{ end }}
-
-    {{ if .IsAdmin }}
-    <a href="/blog/posts/form">Опубликовать пост</a>
-    {{ end }}
 </main>
 </body>
 </html>
