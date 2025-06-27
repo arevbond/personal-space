@@ -3,21 +3,22 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/gomarkdown/markdown"
-	"github.com/gomarkdown/markdown/html"
-	"github.com/gomarkdown/markdown/parser"
 	"log/slog"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/arevbond/arevbond-blog/internal/service/blog/domain"
+	"github.com/gomarkdown/markdown"
+	"github.com/gomarkdown/markdown/html"
+	"github.com/gomarkdown/markdown/parser"
 )
 
 type PostRepository interface {
 	All(ctx context.Context, limit int, offset int) ([]*domain.Post, error)
 	Find(ctx context.Context, id int) (*domain.Post, error)
 	Create(ctx context.Context, post *domain.Post) error
+	Delete(ctx context.Context, id int) error
 }
 
 type Blog struct {
@@ -78,8 +79,18 @@ func (b *Blog) MdToHTML(md []byte) []byte {
 
 	// create HTML renderer with extensions
 	htmlFlags := html.CommonFlags | html.HrefTargetBlank
+	//nolint:exhaustruct // default render options
 	opts := html.RendererOptions{Flags: htmlFlags}
 	renderer := html.NewRenderer(opts)
 
 	return markdown.Render(doc, renderer)
+}
+
+func (b *Blog) DeletePost(ctx context.Context, id int) error {
+	err := b.PostsRepo.Delete(ctx, id)
+	if err != nil {
+		return fmt.Errorf("delete post: %w", err)
+	}
+
+	return nil
 }

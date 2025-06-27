@@ -18,7 +18,7 @@
             <p class="card-text">
                 <small class="text-muted">Опубликовано: {{ .CreatedAt.Format "02.01.2006 15:04" }}</small>
             </p>
-            <a href="/blog/post/{{ .ID }}" class="btn btn-sm btn-outline-primary">Читать</a>
+            <a href="/blog/posts/{{ .ID }}" class="btn btn-sm btn-outline-primary">Читать</a>
         </div>
     </div>
     {{ else }}
@@ -26,7 +26,7 @@
     {{ end }}
 
     {{ if .IsAdmin }}
-        <a href="/blog/post/form">Опубликовать пост</a>
+        <a href="/blog/posts/form">Опубликовать пост</a>
     {{ end }}
 </main>
 </body>

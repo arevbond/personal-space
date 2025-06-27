@@ -70,3 +70,16 @@ func (p *Posts) Create(ctx context.Context, post *domain.Post) error {
 
 	return nil
 }
+
+func (p *Posts) Delete(ctx context.Context, id int) error {
+	query := `DELETE FROM posts WHERE id = $1;`
+
+	args := []any{id}
+
+	_, err := p.DB.ExecContext(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("can't delete post: %w", err)
+	}
+
+	return nil
+}

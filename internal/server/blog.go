@@ -17,16 +17,18 @@ type Blog interface {
 	Posts(ctx context.Context, limit, offset int) ([]*domain.Post, error)
 	Post(ctx context.Context, id int) (*domain.Post, error)
 	CreatePost(ctx context.Context, params domain.PostParams) (int, error)
+	DeletePost(ctx context.Context, id int) error
 
 	MdToHTML(md []byte) []byte
 }
 
 func (s *Server) registerBlogRoutes(mux *http.ServeMux) {
 	mux.Handle("GET /blog/posts", middleware.OptionalAuth(s.Auth, s.log)(http.HandlerFunc(s.postsPage)))
-	mux.HandleFunc("GET /blog/post/{id}", s.postPage)
+	mux.Handle("GET /blog/posts/{id}", middleware.OptionalAuth(s.Auth, s.log)(http.HandlerFunc(s.postPage)))
 
-	mux.Handle("GET /blog/post/form", middleware.RequireAuth(s.Auth, s.log)(http.HandlerFunc(s.createPostPage)))
-	mux.Handle("POST /blog/post", middleware.RequireAuth(s.Auth, s.log)(http.HandlerFunc(s.createPost)))
+	mux.Handle("GET /blog/posts/form", middleware.RequireAuth(s.Auth, s.log)(http.HandlerFunc(s.createPostPage)))
+	mux.Handle("POST /blog/posts", middleware.RequireAuth(s.Auth, s.log)(http.HandlerFunc(s.createPost)))
+	mux.Handle("DELETE /blog/posts/{id}", middleware.RequireAuth(s.Auth, s.log)(http.HandlerFunc(s.deletePost)))
 }
 
 func (s *Server) postsPage(w http.ResponseWriter, r *http.Request) {
@@ -55,6 +57,8 @@ func (s *Server) postsPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) postPage(w http.ResponseWriter, r *http.Request) {
+	isAdmin := r.Context().Value(middleware.IsAdminKey) != nil
+
 	idStr := r.PathValue("id")
 
 	postID, err := strconv.Atoi(idStr)
@@ -79,17 +83,21 @@ func (s *Server) postPage(w http.ResponseWriter, r *http.Request) {
 	tmplContent := template.HTML(content)
 
 	tmplData := struct {
+		ID          int
 		Title       string
 		Description string
 		Content     template.HTML
 		CreatedAt   string
 		UpdatedAt   string
+		IsAdmin     bool
 	}{
+		ID:          post.ID,
 		Title:       post.Title,
 		Description: post.Description,
 		Content:     tmplContent,
 		CreatedAt:   post.CreatedAt.Format("02 Jan 2006"),
 		UpdatedAt:   post.UpdatedAt.Format("02 Jan 2006"),
+		IsAdmin:     isAdmin,
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -155,4 +163,27 @@ func (s *Server) createPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, fmt.Sprintf("/blog/post/%d", postID), http.StatusFound)
+}
+
+func (s *Server) deletePost(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+
+	postID, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+
+		return
+	}
+
+	err = s.Blog.DeletePost(r.Context(), postID)
+	if err != nil {
+		s.log.Error("delete post handler", slog.Any("error", err))
+
+		http.Error(w, "server error", http.StatusInternalServerError)
+
+		return
+	}
+
+	w.Header().Set("HX-Redirect", "/blog/posts")
+	w.WriteHeader(http.StatusOK)
 }

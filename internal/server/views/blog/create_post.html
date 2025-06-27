@@ -9,7 +9,7 @@
 <main class="container">
     {{ template "navbar.html" }}
 
-    <form action="/blog/post" method="POST" enctype="multipart/form-data" class="form-control mb-3">
+    <form action="/blog/posts" method="POST" enctype="multipart/form-data" class="form-control mb-3">
         <label for="title">Название</label>
         <input id="title" class="form-control mb-3" name="title" type="text" placeholder="" />
         <textarea class="form-control mb-3" name="description" rows="2" placeholder="Краткое описание (опционально)"></textarea>
