@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"html/template"
 	"io"
 	"log/slog"
 	"net/http"
@@ -16,6 +17,8 @@ type Blog interface {
 	Posts(ctx context.Context, limit, offset int) ([]*domain.Post, error)
 	Post(ctx context.Context, id int) (*domain.Post, error)
 	CreatePost(ctx context.Context, params domain.PostParams) (int, error)
+
+	MdToHTML(md []byte) []byte
 }
 
 func (s *Server) registerBlogRoutes(mux *http.ServeMux) {
@@ -70,9 +73,28 @@ func (s *Server) postPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	content := s.Blog.MdToHTML(post.Content)
+
+	// #nosec G203 - Content is from trusted markdown stored in database
+	tmplContent := template.HTML(content)
+
+	tmplData := struct {
+		Title       string
+		Description string
+		Content     template.HTML
+		CreatedAt   string
+		UpdatedAt   string
+	}{
+		Title:       post.Title,
+		Description: post.Description,
+		Content:     tmplContent,
+		CreatedAt:   post.CreatedAt.Format("02 Jan 2006"),
+		UpdatedAt:   post.UpdatedAt.Format("02 Jan 2006"),
+	}
+
 	w.WriteHeader(http.StatusOK)
 
-	s.renderTemplate(w, "post.html", post)
+	s.renderTemplate(w, "post.html", tmplData)
 }
 
 func (s *Server) createPostPage(w http.ResponseWriter, r *http.Request) {
