@@ -13,10 +13,21 @@
     {{ range .Posts }}
     <div class="card mb-3 shadow-sm">
         <div class="card-body">
-            <h3 class="card-title mb-2">{{ .Title }}</h3>
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <h3 class="card-title mb-0">{{ .Title }}</h3>
+                {{ if $.IsAdmin }}
+                <div>
+                    {{ if .IsPublished }}
+                    <span class="badge bg-success">Опубликовано</span>
+                    {{ else }}
+                    <span class="badge bg-secondary">Скрыто</span>
+                    {{ end }}
+                </div>
+                {{ end }}
+            </div>
             <p class="card-text text-muted mb-1">{{ .Description }}</p>
             <p class="card-text">
-                <small class="text-muted">Опубликовано: {{ .CreatedAt.Format "02.01.2006 15:04" }}</small>
+                <small class="text-muted">Создано: {{ .CreatedAt.Format "02.01.2006 15:04" }}</small>
             </p>
             <a href="/blog/posts/{{ .ID }}" class="btn btn-sm btn-outline-primary">Читать</a>
         </div>
@@ -26,7 +37,7 @@
     {{ end }}
 
     {{ if .IsAdmin }}
-        <a href="/blog/posts/form">Опубликовать пост</a>
+    <a href="/blog/posts/form">Опубликовать пост</a>
     {{ end }}
 </main>
 </body>

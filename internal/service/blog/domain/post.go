@@ -10,6 +10,7 @@ type Post struct {
 	Description string    `db:"description"`
 	Content     []byte    `db:"content"`
 	Extension   string    `db:"extension"`
+	IsPublished bool      `db:"is_published"`
 	CreatedAt   time.Time `db:"created_at"`
 	UpdatedAt   time.Time `db:"updated_at"`
 }
@@ -18,5 +19,6 @@ type PostParams struct {
 	Title       string
 	Description string
 	Filename    string
+	IsPublished bool
 	Content     []byte
 }

@@ -17,9 +17,15 @@
                 <button type="button" class="btn btn-outline-primary btn-sm" title="Редактировать">
                     <i class="bi bi-pencil"></i>
                 </button>
-                <button type="button" class="btn btn-outline-warning btn-sm" title="Скрыть">
+                {{ if .IsPublished }}
+                <button hx-post="/blog/posts/{{ .ID }}/toggle-publication?is_published={{ .IsPublished }}" type="button" class="btn btn-outline-warning btn-sm" title="Скрыть">
                     <i class="bi bi-eye-slash"></i>
                 </button>
+                {{ else }}
+                   <button hx-post="/blog/posts/{{ .ID }}/toggle-publication?is_published={{ .IsPublished }}" type="button" class="btn btn-outline-warning btn-sm" title="Опубликовать">
+                    <i class="bi bi-eye"></i>
+                   </button>
+                {{ end }}
                 <button hx-delete="/blog/posts/{{ .ID }}" hx-confirm="Уверен, что хочешь удалить данный пост?"
                         type="button" class="btn btn-outline-danger btn-sm" title="Удалить">
                     <i class="bi bi-trash"></i>
@@ -27,8 +33,19 @@
             </span>
             {{ end }}
         </h1>
+
+        {{ if .IsAdmin }}
+        <div class="mb-2">
+            {{ if .IsPublished }}
+            <span class="badge bg-success">Опубликовано</span>
+            {{ else }}
+            <span class="badge bg-secondary">Скрыто</span>
+            {{ end }}
+        </div>
+        {{ end }}
+
         <p class="text-muted">
-            <small>Опубликовано: {{ .CreatedAt }}</small>
+            <small>Создано: {{ .CreatedAt }}</small>
             {{ if ne .CreatedAt .UpdatedAt }}
             <br><small>Обновлено: {{ .UpdatedAt }}</small>
             {{ end }}

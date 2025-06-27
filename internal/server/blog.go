@@ -18,6 +18,7 @@ type Blog interface {
 	Post(ctx context.Context, id int) (*domain.Post, error)
 	CreatePost(ctx context.Context, params domain.PostParams) (int, error)
 	DeletePost(ctx context.Context, id int) error
+	ChangePublishStatus(ctx context.Context, id int, curPublishStatus bool) error
 
 	MdToHTML(md []byte) []byte
 }
@@ -29,6 +30,8 @@ func (s *Server) registerBlogRoutes(mux *http.ServeMux) {
 	mux.Handle("GET /blog/posts/form", middleware.RequireAuth(s.Auth, s.log)(http.HandlerFunc(s.createPostPage)))
 	mux.Handle("POST /blog/posts", middleware.RequireAuth(s.Auth, s.log)(http.HandlerFunc(s.createPost)))
 	mux.Handle("DELETE /blog/posts/{id}", middleware.RequireAuth(s.Auth, s.log)(http.HandlerFunc(s.deletePost)))
+	mux.Handle("POST /blog/posts/{id}/toggle-publication",
+		middleware.RequireAuth(s.Auth, s.log)(http.HandlerFunc(s.togglePostPublication)))
 }
 
 func (s *Server) postsPage(w http.ResponseWriter, r *http.Request) {
@@ -89,6 +92,7 @@ func (s *Server) postPage(w http.ResponseWriter, r *http.Request) {
 		Content     template.HTML
 		CreatedAt   string
 		UpdatedAt   string
+		IsPublished bool
 		IsAdmin     bool
 	}{
 		ID:          post.ID,
@@ -97,6 +101,7 @@ func (s *Server) postPage(w http.ResponseWriter, r *http.Request) {
 		Content:     tmplContent,
 		CreatedAt:   post.CreatedAt.Format("02 Jan 2006"),
 		UpdatedAt:   post.UpdatedAt.Format("02 Jan 2006"),
+		IsPublished: post.IsPublished,
 		IsAdmin:     isAdmin,
 	}
 
@@ -151,6 +156,7 @@ func (s *Server) createPost(w http.ResponseWriter, r *http.Request) {
 		Description: description,
 		Filename:    header.Filename,
 		Content:     content,
+		IsPublished: false,
 	}
 
 	postID, err := s.Blog.CreatePost(r.Context(), postParms)
@@ -162,7 +168,7 @@ func (s *Server) createPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/blog/post/%d", postID), http.StatusFound)
+	http.Redirect(w, r, fmt.Sprintf("/blog/posts/%d", postID), http.StatusFound)
 }
 
 func (s *Server) deletePost(w http.ResponseWriter, r *http.Request) {
@@ -185,5 +191,40 @@ func (s *Server) deletePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("HX-Redirect", "/blog/posts")
+	w.WriteHeader(http.StatusOK)
+}
+
+func (s *Server) togglePostPublication(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+
+	postID, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+
+		return
+	}
+
+	curPublishStatusStr := r.URL.Query().Get("is_published")
+
+	curPublishStatus, err := strconv.ParseBool(curPublishStatusStr)
+	if err != nil {
+		s.log.Error("invalid publish status to toggle handler", slog.String("status", curPublishStatusStr),
+			slog.Any("error", err))
+
+		http.Error(w, "invalid status", http.StatusBadRequest)
+
+		return
+	}
+
+	err = s.Blog.ChangePublishStatus(r.Context(), postID, curPublishStatus)
+	if err != nil {
+		s.log.Error("can't change publish status", slog.Any("error", err))
+
+		http.Error(w, "server error", http.StatusInternalServerError)
+
+		return
+	}
+
+	w.Header().Set("HX-Redirect", fmt.Sprintf("/blog/posts/%d", postID))
 	w.WriteHeader(http.StatusOK)
 }

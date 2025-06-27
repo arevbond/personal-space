@@ -19,6 +19,8 @@ type PostRepository interface {
 	Find(ctx context.Context, id int) (*domain.Post, error)
 	Create(ctx context.Context, post *domain.Post) error
 	Delete(ctx context.Context, id int) error
+
+	SetPublicationStatus(ctx context.Context, id int, isPublished bool) error
 }
 
 type Blog struct {
@@ -59,6 +61,7 @@ func (b *Blog) CreatePost(ctx context.Context, params domain.PostParams) (int, e
 		Description: params.Description,
 		Content:     params.Content,
 		Extension:   filepath.Ext(params.Filename),
+		IsPublished: params.IsPublished,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
@@ -90,6 +93,15 @@ func (b *Blog) DeletePost(ctx context.Context, id int) error {
 	err := b.PostsRepo.Delete(ctx, id)
 	if err != nil {
 		return fmt.Errorf("delete post: %w", err)
+	}
+
+	return nil
+}
+
+func (b *Blog) ChangePublishStatus(ctx context.Context, id int, curPublishStatus bool) error {
+	err := b.PostsRepo.SetPublicationStatus(ctx, id, !curPublishStatus)
+	if err != nil {
+		return fmt.Errorf("repository error: %w", err)
 	}
 
 	return nil
