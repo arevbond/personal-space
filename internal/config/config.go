@@ -40,8 +40,8 @@ func New() (Config, error) {
 	_ = godotenv.Load()
 
 	srvPortString := getEnv("SERVER_PORT", "8080")
-	srvPort, err := strconv.Atoi(srvPortString)
 
+	srvPort, err := strconv.Atoi(srvPortString)
 	if err != nil {
 		return Config{}, fmt.Errorf("can't convert server port to int: %w", err)
 	}
@@ -52,8 +52,8 @@ func New() (Config, error) {
 	}
 
 	storagePortStr := getEnv("PG_PORT", "5432")
-	storagePort, err := strconv.Atoi(storagePortStr)
 
+	storagePort, err := strconv.Atoi(storagePortStr)
 	if err != nil {
 		return Config{}, fmt.Errorf("can't convert storage port to int: %w", err)
 	}

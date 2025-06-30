@@ -32,8 +32,8 @@ func (s *Server) verifyAdminToken(w http.ResponseWriter, r *http.Request) {
 
 	if s.Auth.IsAdminToken(incomeToken) {
 		var token string
-		token, err = s.Auth.NewJWT()
 
+		token, err = s.Auth.NewJWT()
 		if err != nil {
 			s.log.Error("can't create jwt", slog.Any("error", err))
 
