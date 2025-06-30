@@ -23,13 +23,18 @@ type PostRepository interface {
 	SetPublicationStatus(ctx context.Context, id int, isPublished bool) error
 }
 
-type Blog struct {
-	log       *slog.Logger
-	PostsRepo PostRepository
+type ImageProcessor interface {
+	AddPrefix(content []byte, prefix string) ([]byte, error)
 }
 
-func New(log *slog.Logger, posts PostRepository) *Blog {
-	return &Blog{log: log, PostsRepo: posts}
+type Blog struct {
+	log            *slog.Logger
+	PostsRepo      PostRepository
+	ImageProcessor ImageProcessor
+}
+
+func New(log *slog.Logger, posts PostRepository, imgReplacer ImageProcessor) *Blog {
+	return &Blog{log: log, PostsRepo: posts, ImageProcessor: imgReplacer}
 }
 
 func (b *Blog) Posts(ctx context.Context, limit, offset int) ([]*domain.Post, error) {
@@ -55,18 +60,23 @@ func (b *Blog) CreatePost(ctx context.Context, params domain.PostParams) (int, e
 		params.Title = strings.TrimSuffix(params.Filename, filepath.Ext(params.Filename))
 	}
 
+	contentWithCorrectImages, err := b.ImageProcessor.AddPrefix(params.Content, "/static/images/")
+	if err != nil {
+		return -1, fmt.Errorf("can't add prefix to image: %w", err)
+	}
+
 	post := &domain.Post{
 		ID:          0,
 		Title:       params.Title,
 		Description: params.Description,
-		Content:     params.Content,
+		Content:     contentWithCorrectImages,
 		Extension:   filepath.Ext(params.Filename),
 		IsPublished: params.IsPublished,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
 
-	err := b.PostsRepo.Create(ctx, post)
+	err = b.PostsRepo.Create(ctx, post)
 	if err != nil {
 		return -1, fmt.Errorf("can't create post: %w", err)
 	}
