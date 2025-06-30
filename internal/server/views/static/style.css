@@ -14,3 +14,8 @@ pre code.language-go {
     line-height: 1.5;
     white-space: pre;
 }
+
+article .border-top {
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
