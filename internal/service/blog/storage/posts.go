@@ -59,6 +59,22 @@ func (p *Posts) Find(ctx context.Context, postID int) (*domain.Post, error) {
 	return &post, nil
 }
 
+func (p *Posts) FindBySlug(ctx context.Context, slug string) (*domain.Post, error) {
+	query := `
+		SELECT id, title, description, content, extension, slug, is_published, created_at, updated_at
+		FROM posts
+		WHERE slug = $1;`
+
+	var post domain.Post
+
+	err := p.DB.GetContext(ctx, &post, query, slug)
+	if err != nil {
+		return nil, fmt.Errorf("can't get post from db: %w", err)
+	}
+
+	return &post, nil
+}
+
 func (p *Posts) Create(ctx context.Context, post *domain.Post) error {
 	query := `
 		INSERT INTO posts (title, description, content, extension, slug, is_published, created_at, updated_at)

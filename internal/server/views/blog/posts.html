@@ -20,7 +20,7 @@
             <div class="card mb-3 shadow-sm">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start mb-2">
-                        <a href="/blog/posts/{{ .ID }}" class="text-decoration-none text-reset"><h3 class="card-title mb-0">{{ .Title }}</h3></a>
+                        <a href="/blog/posts/{{ .Slug }}" class="text-decoration-none text-reset"><h3 class="card-title mb-0">{{ .Title }}</h3></a>
                         {{ if $.IsAdmin }}
                         <div>
                             {{ if .IsPublished }}
@@ -35,7 +35,7 @@
                         <small class="text-muted">{{ .CreatedAt.Format "02.01.2006 15:04" }}</small>
                     </p>
                     <p class="card-text text-muted">{{ .Description }}</p>
-                    <a href="/blog/posts/{{ .ID }}" class="btn btn-sm btn-outline-primary">Читать</a>
+                    <a href="/blog/posts/{{ .Slug }}" class="btn btn-sm btn-outline-primary">Читать</a>
                 </div>
             </div>
             {{ else }}
@@ -76,7 +76,7 @@
     <div class="card mb-3 shadow-sm">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-start mb-2">
-                <a href="/blog/posts/{{ .ID }}" class="text-decoration-none text-reset"><h3 class="card-title mb-0">{{ .Title }}</h3></a>
+                <a href="/blog/posts/{{ .Slug }}" class="text-decoration-none text-reset"><h3 class="card-title mb-0">{{ .Title }}</h3></a>
                 {{ if $.IsAdmin }}
                 <div>
                     {{ if .IsPublished }}
@@ -91,7 +91,7 @@
                 <small class="text-muted">{{ .CreatedAt.Format "02.01.2006 15:04" }}</small>
             </p>
             <p class="card-text text-muted">{{ .Description }}</p>
-            <a href="/blog/posts/{{ .ID }}" class="btn btn-sm btn-outline-primary">Читать</a>
+            <a href="/blog/posts/{{ .Slug }}" class="btn btn-sm btn-outline-primary">Читать</a>
         </div>
     </div>
     {{ end }}

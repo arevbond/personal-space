@@ -19,6 +19,7 @@ import (
 type PostRepository interface {
 	All(ctx context.Context, limit int, offset int, publishedOnly bool) ([]*domain.Post, error)
 	Find(ctx context.Context, id int) (*domain.Post, error)
+	FindBySlug(ctx context.Context, slug string) (*domain.Post, error)
 	Create(ctx context.Context, post *domain.Post) error
 	Delete(ctx context.Context, id int) error
 
@@ -59,14 +60,23 @@ func (b *Blog) Post(ctx context.Context, id int) (*domain.Post, error) {
 	return post, nil
 }
 
-func (b *Blog) CreatePost(ctx context.Context, params domain.PostParams) (int, error) {
+func (b *Blog) PostBySlug(ctx context.Context, slug string) (*domain.Post, error) {
+	post, err := b.PostsRepo.FindBySlug(ctx, slug)
+	if err != nil {
+		return nil, fmt.Errorf("can't process post by id in service: %w", err)
+	}
+
+	return post, nil
+}
+
+func (b *Blog) CreatePost(ctx context.Context, params domain.PostParams) (*domain.Post, error) {
 	if params.Title == "" {
 		params.Title = strings.TrimSuffix(params.Filename, filepath.Ext(params.Filename))
 	}
 
 	contentWithCorrectImages, err := b.ImageProcessor.AddPrefix(params.Content, "/static/images/")
 	if err != nil {
-		return -1, fmt.Errorf("can't add prefix to image: %w", err)
+		return nil, fmt.Errorf("can't add prefix to image: %w", err)
 	}
 
 	var lastError error
@@ -86,15 +96,15 @@ func (b *Blog) CreatePost(ctx context.Context, params domain.PostParams) (int, e
 
 		lastError = b.PostsRepo.Create(ctx, post)
 		if nil == lastError {
-			return post.ID, nil
+			return post, nil
 		}
 
 		if !errors.Is(lastError, errs.ErrDuplicate) {
-			return -1, fmt.Errorf("can't create post: %w", lastError)
+			return nil, fmt.Errorf("can't create post: %w", lastError)
 		}
 	}
 
-	return -1, fmt.Errorf("can't create post: %w", lastError)
+	return nil, fmt.Errorf("can't create post: %w", lastError)
 }
 
 func (b *Blog) covertTitleToSlug(title string, num int) string {

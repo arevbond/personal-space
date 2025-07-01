@@ -16,7 +16,8 @@ import (
 type Blog interface {
 	Posts(ctx context.Context, limit, offset int, isAdmin bool) ([]*domain.Post, error)
 	Post(ctx context.Context, id int) (*domain.Post, error)
-	CreatePost(ctx context.Context, params domain.PostParams) (int, error)
+	PostBySlug(ctx context.Context, slug string) (*domain.Post, error)
+	CreatePost(ctx context.Context, params domain.PostParams) (*domain.Post, error)
 	DeletePost(ctx context.Context, id int) error
 	ChangePublishStatus(ctx context.Context, id int, curPublishStatus bool) error
 
@@ -26,7 +27,7 @@ type Blog interface {
 func (s *Server) registerBlogRoutes(mux *http.ServeMux) {
 	mux.Handle("GET /blog/posts", middleware.OptionalAuth(s.Auth, s.log)(http.HandlerFunc(s.postsPage)))
 	mux.Handle("GET /blog/posts/more", middleware.OptionalAuth(s.Auth, s.log)(http.HandlerFunc(s.posts)))
-	mux.Handle("GET /blog/posts/{id}", middleware.OptionalAuth(s.Auth, s.log)(http.HandlerFunc(s.postPage)))
+	mux.Handle("GET /blog/posts/{slug}", middleware.OptionalAuth(s.Auth, s.log)(http.HandlerFunc(s.postPage)))
 
 	mux.Handle("GET /blog/posts/form", middleware.RequireAuth(s.Auth, s.log)(http.HandlerFunc(s.createPostPage)))
 	mux.Handle("POST /blog/posts", middleware.RequireAuth(s.Auth, s.log)(http.HandlerFunc(s.createPost)))
@@ -103,16 +104,9 @@ func (s *Server) posts(w http.ResponseWriter, r *http.Request) {
 func (s *Server) postPage(w http.ResponseWriter, r *http.Request) {
 	isAdmin := r.Context().Value(middleware.IsAdminKey) != nil
 
-	idStr := r.PathValue("id")
+	slug := r.PathValue("slug")
 
-	postID, err := strconv.Atoi(idStr)
-	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
-
-		return
-	}
-
-	post, err := s.Blog.Post(r.Context(), postID)
+	post, err := s.Blog.PostBySlug(r.Context(), slug)
 	if err != nil {
 		s.log.Error("can't process service post method", slog.Any("error", err))
 
@@ -131,6 +125,7 @@ func (s *Server) postPage(w http.ResponseWriter, r *http.Request) {
 		Title       string
 		Description string
 		Content     template.HTML
+		Slug        string
 		CreatedAt   string
 		UpdatedAt   string
 		IsPublished bool
@@ -140,6 +135,7 @@ func (s *Server) postPage(w http.ResponseWriter, r *http.Request) {
 		Title:       post.Title,
 		Description: post.Description,
 		Content:     tmplContent,
+		Slug:        post.Slug,
 		CreatedAt:   post.CreatedAt.Format("02 Jan 2006"),
 		UpdatedAt:   post.UpdatedAt.Format("02 Jan 2006"),
 		IsPublished: post.IsPublished,
@@ -200,7 +196,7 @@ func (s *Server) createPost(w http.ResponseWriter, r *http.Request) {
 		IsPublished: false,
 	}
 
-	postID, err := s.Blog.CreatePost(r.Context(), postParms)
+	post, err := s.Blog.CreatePost(r.Context(), postParms)
 	if err != nil {
 		s.log.Error("can't create post", slog.Any("error", err))
 
@@ -209,7 +205,7 @@ func (s *Server) createPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/blog/posts/%d", postID), http.StatusFound)
+	http.Redirect(w, r, fmt.Sprintf("/blog/posts/%s", post.Slug), http.StatusFound)
 }
 
 func (s *Server) deletePost(w http.ResponseWriter, r *http.Request) {
@@ -246,6 +242,7 @@ func (s *Server) togglePostPublication(w http.ResponseWriter, r *http.Request) {
 	}
 
 	curPublishStatusStr := r.URL.Query().Get("is_published")
+	slug := r.URL.Query().Get("slug")
 
 	curPublishStatus, err := strconv.ParseBool(curPublishStatusStr)
 	if err != nil {
@@ -266,6 +263,6 @@ func (s *Server) togglePostPublication(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("HX-Redirect", fmt.Sprintf("/blog/posts/%d", postID))
+	w.Header().Set("HX-Redirect", fmt.Sprintf("/blog/posts/%s", slug))
 	w.WriteHeader(http.StatusOK)
 }
