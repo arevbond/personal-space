@@ -81,6 +81,11 @@ func (b *Blog) CreatePost(ctx context.Context, params domain.PostParams) (*domai
 
 	var lastError error
 
+	baseSlug := params.Title
+	if params.Slug != "" {
+		baseSlug = params.Slug
+	}
+
 	for i := 1; i <= 100; i++ {
 		post := &domain.Post{
 			ID:          0,
@@ -89,7 +94,7 @@ func (b *Blog) CreatePost(ctx context.Context, params domain.PostParams) (*domai
 			Content:     contentWithCorrectImages,
 			Extension:   filepath.Ext(params.Filename),
 			IsPublished: params.IsPublished,
-			Slug:        b.covertTitleToSlug(params.Title, i),
+			Slug:        b.covertTitleToSlug(baseSlug, i),
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		}

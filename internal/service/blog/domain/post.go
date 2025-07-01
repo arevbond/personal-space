@@ -18,6 +18,7 @@ type Post struct {
 
 type PostParams struct {
 	Title       string
+	Slug        string
 	Description string
 	Filename    string
 	IsPublished bool

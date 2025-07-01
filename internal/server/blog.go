@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"html/template"
 	"io"
 	"log/slog"
@@ -164,6 +163,7 @@ func (s *Server) createPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	title := r.FormValue("title")
+	slug := r.FormValue("slug")
 	description := r.FormValue("description")
 
 	s.log.Debug("create post handler", slog.String("title", title),
@@ -190,6 +190,7 @@ func (s *Server) createPost(w http.ResponseWriter, r *http.Request) {
 
 	postParms := domain.PostParams{
 		Title:       title,
+		Slug:        slug,
 		Description: description,
 		Filename:    header.Filename,
 		Content:     content,
@@ -205,7 +206,7 @@ func (s *Server) createPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/blog/posts/%s", post.Slug), http.StatusFound)
+	http.Redirect(w, r, "/blog/posts/"+post.Slug, http.StatusFound)
 }
 
 func (s *Server) deletePost(w http.ResponseWriter, r *http.Request) {
@@ -263,6 +264,6 @@ func (s *Server) togglePostPublication(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("HX-Redirect", fmt.Sprintf("/blog/posts/%s", slug))
+	w.Header().Set("HX-Redirect", "/blog/posts/"+slug)
 	w.WriteHeader(http.StatusOK)
 }
