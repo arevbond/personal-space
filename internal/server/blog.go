@@ -135,8 +135,8 @@ func (s *Server) postPage(w http.ResponseWriter, r *http.Request) {
 		Description: post.Description,
 		Content:     tmplContent,
 		Slug:        post.Slug,
-		CreatedAt:   post.CreatedAt.Format("02 Jan 2006"),
-		UpdatedAt:   post.UpdatedAt.Format("02 Jan 2006"),
+		CreatedAt:   post.CreatedAt.Format("02.01.2006"),
+		UpdatedAt:   post.UpdatedAt.Format("02.01.2006"),
 		IsPublished: post.IsPublished,
 		IsAdmin:     isAdmin,
 	}
