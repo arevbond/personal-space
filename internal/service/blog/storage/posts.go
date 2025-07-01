@@ -2,11 +2,13 @@ package storage
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 
 	"github.com/arevbond/arevbond-blog/internal/service/blog/domain"
 	"github.com/arevbond/arevbond-blog/internal/service/errs"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -15,13 +17,17 @@ type Posts struct {
 	DB  *sqlx.DB
 }
 
+const (
+	UniqueViolationErr = "23505"
+)
+
 func NewPostsRepo(log *slog.Logger, db *sqlx.DB) *Posts {
 	return &Posts{log: log, DB: db}
 }
 
 func (p *Posts) All(ctx context.Context, limit int, offset int, publishedOnly bool) ([]*domain.Post, error) {
 	query := `
-		SELECT id, title, description, content, extension, is_published, created_at, updated_at
+		SELECT id, title, description, content, extension, slug, is_published, created_at, updated_at
 		FROM posts
 		WHERE ($3 = false OR is_published = true)
 		ORDER BY created_at DESC
@@ -39,7 +45,7 @@ func (p *Posts) All(ctx context.Context, limit int, offset int, publishedOnly bo
 
 func (p *Posts) Find(ctx context.Context, postID int) (*domain.Post, error) {
 	query := `
-		SELECT id, title, description, content, extension, is_published, created_at, updated_at
+		SELECT id, title, description, content, extension, slug, is_published, created_at, updated_at
 		FROM posts
 		WHERE id = $1;`
 
@@ -55,15 +61,19 @@ func (p *Posts) Find(ctx context.Context, postID int) (*domain.Post, error) {
 
 func (p *Posts) Create(ctx context.Context, post *domain.Post) error {
 	query := `
-		INSERT INTO posts (title, description, content, extension, is_published, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO posts (title, description, content, extension, slug, is_published, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		RETURNING id;`
 
-	args := []any{post.Title, post.Description, post.Content, post.Extension,
+	args := []any{post.Title, post.Description, post.Content, post.Extension, post.Slug,
 		post.IsPublished, post.CreatedAt, post.UpdatedAt}
 
 	row := p.DB.QueryRowContext(ctx, query, args...)
 	if err := row.Scan(&post.ID); err != nil {
+		if IsErrorCode(err, UniqueViolationErr) {
+			return fmt.Errorf("can't insert new row %w: %w", errs.ErrDuplicate, err)
+		}
+
 		return fmt.Errorf("can't scan id for post: %w", err)
 	}
 
@@ -105,4 +115,13 @@ func (p *Posts) Delete(ctx context.Context, id int) error {
 	}
 
 	return nil
+}
+
+func IsErrorCode(err error, errCode string) bool {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		return pgErr.Code == errCode
+	}
+
+	return false
 }

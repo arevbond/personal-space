@@ -11,6 +11,7 @@ type Post struct {
 	Content     []byte    `db:"content"`
 	Extension   string    `db:"extension"`
 	IsPublished bool      `db:"is_published"`
+	Slug        string    `db:"slug"`
 	CreatedAt   time.Time `db:"created_at"`
 	UpdatedAt   time.Time `db:"updated_at"`
 }

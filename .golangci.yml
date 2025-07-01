@@ -130,6 +130,8 @@ linters:
         - db
         - mg
         - p
+        - i
+        - sb
       ignore-decls:
         - d *xml.Decoder
     wrapcheck:

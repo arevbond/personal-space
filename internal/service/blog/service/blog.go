@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"path/filepath"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"github.com/arevbond/arevbond-blog/internal/service/blog/domain"
+	"github.com/arevbond/arevbond-blog/internal/service/errs"
 	"github.com/gomarkdown/markdown"
 	"github.com/gomarkdown/markdown/html"
 	"github.com/gomarkdown/markdown/parser"
@@ -67,23 +69,115 @@ func (b *Blog) CreatePost(ctx context.Context, params domain.PostParams) (int, e
 		return -1, fmt.Errorf("can't add prefix to image: %w", err)
 	}
 
-	post := &domain.Post{
-		ID:          0,
-		Title:       params.Title,
-		Description: params.Description,
-		Content:     contentWithCorrectImages,
-		Extension:   filepath.Ext(params.Filename),
-		IsPublished: params.IsPublished,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+	var lastError error
+
+	for i := 1; i <= 100; i++ {
+		post := &domain.Post{
+			ID:          0,
+			Title:       params.Title,
+			Description: params.Description,
+			Content:     contentWithCorrectImages,
+			Extension:   filepath.Ext(params.Filename),
+			IsPublished: params.IsPublished,
+			Slug:        b.covertTitleToSlug(params.Title, i),
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		}
+
+		lastError = b.PostsRepo.Create(ctx, post)
+		if nil == lastError {
+			return post.ID, nil
+		}
+
+		if !errors.Is(lastError, errs.ErrDuplicate) {
+			return -1, fmt.Errorf("can't create post: %w", lastError)
+		}
 	}
 
-	err = b.PostsRepo.Create(ctx, post)
-	if err != nil {
-		return -1, fmt.Errorf("can't create post: %w", err)
+	return -1, fmt.Errorf("can't create post: %w", lastError)
+}
+
+func (b *Blog) covertTitleToSlug(title string, num int) string {
+	lowerTitle := strings.ToLower(title)
+	strs := strings.Fields(b.removeSpecialChars(lowerTitle))
+
+	enStrs := make([]string, len(strs))
+
+	for i := 0; i < len(enStrs); i++ {
+		enStrs[i] = b.ruToEn(strs[i])
 	}
 
-	return post.ID, nil
+	slug := strings.Join(enStrs, "-")
+
+	if num > 1 {
+		slug = fmt.Sprintf("%s-%d", slug, num)
+	}
+
+	return slug
+}
+
+func (b *Blog) ruToEn(str string) string {
+	rutoEnMp := map[string]string{
+		"а": "a",
+		"б": "b",
+		"в": "v",
+		"г": "g",
+		"д": "d",
+		"е": "e",
+		"ж": "zh",
+		"з": "z",
+		"и": "i",
+		"й": "i",
+		"к": "k",
+		"л": "l",
+		"м": "m",
+		"н": "n",
+		"о": "o",
+		"п": "p",
+		"р": "r",
+		"с": "s",
+		"т": "t",
+		"у": "u",
+		"ф": "f",
+		"х": "kh",
+		"ц": "ts",
+		"ч": "ch",
+		"ш": "sh",
+		"щ": "shch",
+		"ъ": "",
+		"ы": "y",
+		"ь": "",
+		"э": "e",
+		"ю": "iu",
+		"я": "ia",
+		"ё": "e",
+	}
+
+	var sb strings.Builder
+
+	for _, ch := range str {
+		if res, ok := rutoEnMp[string(ch)]; ok {
+			sb.WriteString(res)
+		}
+	}
+
+	return sb.String()
+}
+
+func (b *Blog) removeSpecialChars(str string) string {
+	specialChars := map[rune]struct{}{'.': {}, ',': {}, '|': {}, '!': {}, '?': {}, ':': {}, ';': {}, '"': {}, '\'': {}}
+
+	var sb strings.Builder
+
+	for _, ch := range str {
+		if _, ok := specialChars[ch]; ok {
+			continue
+		}
+
+		sb.WriteRune(ch)
+	}
+
+	return sb.String()
 }
 
 func (b *Blog) MdToHTML(md []byte) []byte {
