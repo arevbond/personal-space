@@ -15,7 +15,7 @@ import (
 )
 
 type PostRepository interface {
-	All(ctx context.Context, limit int, offset int) ([]*domain.Post, error)
+	All(ctx context.Context, limit int, offset int, publishedOnly bool) ([]*domain.Post, error)
 	Find(ctx context.Context, id int) (*domain.Post, error)
 	Create(ctx context.Context, post *domain.Post) error
 	Delete(ctx context.Context, id int) error
@@ -37,10 +37,12 @@ func New(log *slog.Logger, posts PostRepository, imgReplacer ImageProcessor) *Bl
 	return &Blog{log: log, PostsRepo: posts, ImageProcessor: imgReplacer}
 }
 
-func (b *Blog) Posts(ctx context.Context, limit, offset int) ([]*domain.Post, error) {
-	posts, err := b.PostsRepo.All(ctx, limit, offset)
+func (b *Blog) Posts(ctx context.Context, limit, offset int, isAdmin bool) ([]*domain.Post, error) {
+	publishedOnly := !isAdmin
+
+	posts, err := b.PostsRepo.All(ctx, limit, offset, publishedOnly)
 	if err != nil {
-		return nil, fmt.Errorf("can't process posts in service: %w", err)
+		return nil, fmt.Errorf("can't process all posts in service: %w", err)
 	}
 
 	return posts, nil

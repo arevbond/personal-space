@@ -19,17 +19,17 @@ func NewPostsRepo(log *slog.Logger, db *sqlx.DB) *Posts {
 	return &Posts{log: log, DB: db}
 }
 
-func (p *Posts) All(ctx context.Context, limit int, offset int) ([]*domain.Post, error) {
+func (p *Posts) All(ctx context.Context, limit int, offset int, publishedOnly bool) ([]*domain.Post, error) {
 	query := `
 		SELECT id, title, description, content, extension, is_published, created_at, updated_at
 		FROM posts
--- 		WHERE is_published = true
+		WHERE ($3 = false OR is_published = true)
 		ORDER BY created_at DESC
 		LIMIT $1 OFFSET $2;`
 
 	posts := []*domain.Post{}
 
-	err := p.DB.SelectContext(ctx, &posts, query, limit, offset)
+	err := p.DB.SelectContext(ctx, &posts, query, limit, offset, publishedOnly)
 	if err != nil {
 		return nil, fmt.Errorf("can't get posts from db: %w", err)
 	}

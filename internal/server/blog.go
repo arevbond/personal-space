@@ -14,7 +14,7 @@ import (
 )
 
 type Blog interface {
-	Posts(ctx context.Context, limit, offset int) ([]*domain.Post, error)
+	Posts(ctx context.Context, limit, offset int, isAdmin bool) ([]*domain.Post, error)
 	Post(ctx context.Context, id int) (*domain.Post, error)
 	CreatePost(ctx context.Context, params domain.PostParams) (int, error)
 	DeletePost(ctx context.Context, id int) error
@@ -38,9 +38,7 @@ func (s *Server) registerBlogRoutes(mux *http.ServeMux) {
 func (s *Server) postsPage(w http.ResponseWriter, r *http.Request) {
 	isAdmin := r.Context().Value(middleware.IsAdminKey) != nil
 
-	const pageLimit = 10
-
-	posts, err := s.Blog.Posts(r.Context(), pageLimit+1, 0)
+	posts, err := s.Blog.Posts(r.Context(), s.pageLimit+1, 0, isAdmin)
 	if err != nil {
 		s.log.Error("can't get posts from db", slog.Any("error", err))
 
@@ -49,19 +47,14 @@ func (s *Server) postsPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmplData := struct {
-		Posts        []*domain.Post
-		IsAdmin      bool
-		HasNextPages bool
-		NextOffset   int
-	}{
+	tmplData := PostsPageData{
 		Posts:        posts,
 		IsAdmin:      isAdmin,
 		HasNextPages: false,
 		NextOffset:   len(posts),
 	}
 
-	if len(posts) == pageLimit+1 {
+	if len(posts) == s.pageLimit+1 {
 		tmplData.HasNextPages = true
 		tmplData.Posts = tmplData.Posts[:len(tmplData.Posts)-1]
 		tmplData.NextOffset = len(tmplData.Posts)
@@ -78,11 +71,11 @@ func (s *Server) posts(w http.ResponseWriter, r *http.Request) {
 	offset, err := strconv.Atoi(offsetStr)
 	if err != nil {
 		s.log.Error("can't convert offset to int", slog.Any("error", err))
+
+		offset = 0
 	}
 
-	const pageLimit = 10
-
-	posts, err := s.Blog.Posts(r.Context(), pageLimit+1, offset)
+	posts, err := s.Blog.Posts(r.Context(), s.pageLimit+1, offset, isAdmin)
 	if err != nil {
 		s.log.Error("can't get posts from db", slog.Any("error", err))
 
@@ -91,19 +84,14 @@ func (s *Server) posts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmplData := struct {
-		Posts        []*domain.Post
-		IsAdmin      bool
-		HasNextPages bool
-		NextOffset   int
-	}{
+	tmplData := PostsPageData{
 		Posts:        posts,
 		IsAdmin:      isAdmin,
 		HasNextPages: false,
 		NextOffset:   offset + len(posts),
 	}
 
-	if len(posts) == pageLimit+1 {
+	if len(posts) == s.pageLimit+1 {
 		tmplData.HasNextPages = true
 		tmplData.Posts = tmplData.Posts[:len(tmplData.Posts)-1]
 		tmplData.NextOffset = offset + len(tmplData.Posts)

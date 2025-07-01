@@ -38,6 +38,8 @@ type Server struct {
 	Services
 	log  *slog.Logger
 	tmpl *template.Template
+
+	pageLimit int
 }
 
 func New(log *slog.Logger, cfg config.Server, dependency Services) *Server {
@@ -49,12 +51,15 @@ func New(log *slog.Logger, cfg config.Server, dependency Services) *Server {
 		ErrorLog:          slog.NewLogLogger(log.Handler(), slog.LevelError),
 	}
 
+	const pageLimit = 10
+
 	return &Server{
 		Server:   srv,
 		Services: dependency,
 		log:      log,
 		tmpl: template.Must(template.ParseFS(templatesFS,
 			"views/*.html", "views/blog/*.html")),
+		pageLimit: pageLimit,
 	}
 }
 
