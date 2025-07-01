@@ -25,6 +25,7 @@ type Blog interface {
 
 func (s *Server) registerBlogRoutes(mux *http.ServeMux) {
 	mux.Handle("GET /blog/posts", middleware.OptionalAuth(s.Auth, s.log)(http.HandlerFunc(s.postsPage)))
+	mux.Handle("GET /blog/posts/more", middleware.OptionalAuth(s.Auth, s.log)(http.HandlerFunc(s.posts)))
 	mux.Handle("GET /blog/posts/{id}", middleware.OptionalAuth(s.Auth, s.log)(http.HandlerFunc(s.postPage)))
 
 	mux.Handle("GET /blog/posts/form", middleware.RequireAuth(s.Auth, s.log)(http.HandlerFunc(s.createPostPage)))
@@ -39,7 +40,7 @@ func (s *Server) postsPage(w http.ResponseWriter, r *http.Request) {
 
 	const pageLimit = 10
 
-	posts, err := s.Blog.Posts(r.Context(), pageLimit, 0)
+	posts, err := s.Blog.Posts(r.Context(), pageLimit+1, 0)
 	if err != nil {
 		s.log.Error("can't get posts from db", slog.Any("error", err))
 
@@ -49,14 +50,66 @@ func (s *Server) postsPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tmplData := struct {
-		Posts   []*domain.Post
-		IsAdmin bool
+		Posts        []*domain.Post
+		IsAdmin      bool
+		HasNextPages bool
+		NextOffset   int
 	}{
-		Posts:   posts,
-		IsAdmin: isAdmin,
+		Posts:        posts,
+		IsAdmin:      isAdmin,
+		HasNextPages: false,
+		NextOffset:   len(posts),
+	}
+
+	if len(posts) == pageLimit+1 {
+		tmplData.HasNextPages = true
+		tmplData.Posts = tmplData.Posts[:len(tmplData.Posts)-1]
+		tmplData.NextOffset = len(tmplData.Posts)
 	}
 
 	s.renderTemplate(w, "posts.html", tmplData)
+}
+
+func (s *Server) posts(w http.ResponseWriter, r *http.Request) {
+	isAdmin := r.Context().Value(middleware.IsAdminKey) != nil
+
+	offsetStr := r.URL.Query().Get("offset")
+
+	offset, err := strconv.Atoi(offsetStr)
+	if err != nil {
+		s.log.Error("can't convert offset to int", slog.Any("error", err))
+	}
+
+	const pageLimit = 10
+
+	posts, err := s.Blog.Posts(r.Context(), pageLimit+1, offset)
+	if err != nil {
+		s.log.Error("can't get posts from db", slog.Any("error", err))
+
+		http.Error(w, "can't get posts from db", http.StatusInternalServerError)
+
+		return
+	}
+
+	tmplData := struct {
+		Posts        []*domain.Post
+		IsAdmin      bool
+		HasNextPages bool
+		NextOffset   int
+	}{
+		Posts:        posts,
+		IsAdmin:      isAdmin,
+		HasNextPages: false,
+		NextOffset:   offset + len(posts),
+	}
+
+	if len(posts) == pageLimit+1 {
+		tmplData.HasNextPages = true
+		tmplData.Posts = tmplData.Posts[:len(tmplData.Posts)-1]
+		tmplData.NextOffset = offset + len(tmplData.Posts)
+	}
+
+	s.renderTemplate(w, "pagination-posts", tmplData)
 }
 
 func (s *Server) postPage(w http.ResponseWriter, r *http.Request) {
