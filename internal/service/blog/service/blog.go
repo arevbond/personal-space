@@ -173,6 +173,8 @@ func (b *Blog) ruToEn(str string) string {
 	for _, ch := range str {
 		if res, ok := rutoEnMp[string(ch)]; ok {
 			sb.WriteString(res)
+		} else {
+			sb.WriteRune(ch)
 		}
 	}
 
