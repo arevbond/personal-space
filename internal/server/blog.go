@@ -51,9 +51,7 @@ func (s *Server) postsPage(w http.ResponseWriter, r *http.Request) {
 
 	categories, err := s.Blog.Categories(r.Context())
 	if err != nil {
-		s.log.Error("all categories handler", slog.Any("error", err))
-
-		http.Error(w, "can't get categories", http.StatusInternalServerError)
+		s.renderError(w, "can't get categories", err, http.StatusInternalServerError)
 
 		return
 	}
@@ -163,9 +161,7 @@ func (s *Server) postPage(w http.ResponseWriter, r *http.Request) {
 func (s *Server) createPostPage(w http.ResponseWriter, r *http.Request) {
 	categories, err := s.Blog.Categories(r.Context())
 	if err != nil {
-		s.log.Error("all categories handler", slog.Any("error", err))
-
-		http.Error(w, "can't get categories", http.StatusInternalServerError)
+		s.renderError(w, "can't get categories", err, http.StatusInternalServerError)
 
 		return
 	}
@@ -184,9 +180,7 @@ func (s *Server) createPost(w http.ResponseWriter, r *http.Request) {
 	const maxRequestSize = 1_000_000
 
 	if err := r.ParseMultipartForm(maxRequestSize); err != nil {
-		s.log.Warn("can't parse file", slog.Any("error", err))
-
-		http.Error(w, "can't parse form", http.StatusBadRequest)
+		s.renderError(w, "can't parse file", err, http.StatusBadRequest)
 
 		return
 	}
@@ -245,16 +239,14 @@ func (s *Server) deletePost(w http.ResponseWriter, r *http.Request) {
 
 	postID, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		s.renderError(w, "invalid post id", err, http.StatusBadRequest)
 
 		return
 	}
 
 	err = s.Blog.DeletePost(r.Context(), postID)
 	if err != nil {
-		s.log.Error("delete post handler", slog.Any("error", err))
-
-		http.Error(w, "server error", http.StatusInternalServerError)
+		s.renderError(w, "can't delete post", err, http.StatusInternalServerError)
 
 		return
 	}
@@ -268,7 +260,7 @@ func (s *Server) togglePostPublication(w http.ResponseWriter, r *http.Request) {
 
 	postID, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		s.renderError(w, "invalid post id", err, http.StatusBadRequest)
 
 		return
 	}
@@ -278,19 +270,14 @@ func (s *Server) togglePostPublication(w http.ResponseWriter, r *http.Request) {
 
 	curPublishStatus, err := strconv.ParseBool(curPublishStatusStr)
 	if err != nil {
-		s.log.Error("invalid publish status to toggle handler", slog.String("status", curPublishStatusStr),
-			slog.Any("error", err))
-
-		http.Error(w, "invalid status", http.StatusBadRequest)
+		s.renderError(w, "invalid publish status", err, http.StatusBadRequest)
 
 		return
 	}
 
 	err = s.Blog.ChangePublishStatus(r.Context(), postID, curPublishStatus)
 	if err != nil {
-		s.log.Error("can't change publish status", slog.Any("error", err))
-
-		http.Error(w, "server error", http.StatusInternalServerError)
+		s.renderError(w, "can't change publish status", err, http.StatusInternalServerError)
 
 		return
 	}
