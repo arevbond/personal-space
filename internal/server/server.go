@@ -51,7 +51,7 @@ func New(log *slog.Logger, cfg config.Server, dependency Services) *Server {
 		ErrorLog:          slog.NewLogLogger(log.Handler(), slog.LevelError),
 	}
 
-	const pageLimit = 10
+	const pageLimit = 5
 
 	return &Server{
 		Server:   srv,

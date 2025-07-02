@@ -49,12 +49,19 @@
             {{ .Content }}
         </div>
         <hr/>
-        <p class="text-muted">
-            <small>Создано: {{ .CreatedAt }}</small>
-            {{ if ne .CreatedAt .UpdatedAt }}
-            <br><small>Обновлено: {{ .UpdatedAt }}</small>
+        <div class="d-flex justify-content-between align-items-start text-muted">
+            <div>
+                <span class="fs-6">Создано: {{ .CreatedAt }}</span>
+                {{ if ne .CreatedAt .UpdatedAt }}
+                <br><span class="fs-6">Обновлено: {{ .UpdatedAt }}</span>
+                {{ end }}
+            </div>
+            {{ if .CategoryName }}
+            <div>
+                <span class="badge bg-light text-dark fs-6 px-3 py-2">{{ .CategoryName }}</span>
+            </div>
             {{ end }}
-        </p>
+        </div>
     </article>
 
     <div class="mt-4 mb-5">

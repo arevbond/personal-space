@@ -148,3 +148,29 @@ func IsErrorCode(err error, errCode string) bool {
 
 	return false
 }
+
+func (p *Posts) AllWithCategory(
+	ctx context.Context,
+	limit int,
+	offset int,
+	publishedOnly bool,
+	categoryID int,
+) ([]*domain.Post, error) {
+	query := `
+		SELECT p.id, title, description, content, extension, slug, is_published, category_id, 
+		       c.name as category_name, created_at, updated_at
+		FROM posts p
+		LEFT JOIN categories c ON category_id = c.id
+		WHERE ($3 = false OR is_published = true) AND p.category_id = $4
+		ORDER BY created_at DESC
+		LIMIT $1 OFFSET $2;`
+
+	posts := []*domain.Post{}
+
+	err := p.DB.SelectContext(ctx, &posts, query, limit, offset, publishedOnly, categoryID)
+	if err != nil {
+		return nil, fmt.Errorf("can't get posts from db: %w", err)
+	}
+
+	return posts, nil
+}

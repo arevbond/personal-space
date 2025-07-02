@@ -40,7 +40,14 @@ func (s *Server) registerBlogRoutes(mux *http.ServeMux) {
 func (s *Server) postsPage(w http.ResponseWriter, r *http.Request) {
 	isAdmin := r.Context().Value(middleware.IsAdminKey) != nil
 
-	params := domain.SelectPostsParams{Limit: s.pageLimit + 1, Offset: 0, IsAdmin: isAdmin}
+	categoryIDStr := r.URL.Query().Get("category_id")
+
+	categoryID, err := strconv.Atoi(categoryIDStr)
+	if err != nil {
+		categoryID = 0
+	}
+
+	params := domain.SelectPostsParams{Limit: s.pageLimit + 1, Offset: 0, IsAdmin: isAdmin, CategoryID: categoryID}
 
 	posts, err := s.Blog.Posts(r.Context(), params)
 	if err != nil {
@@ -61,10 +68,11 @@ func (s *Server) postsPage(w http.ResponseWriter, r *http.Request) {
 	tmplData := PostsPageData{
 		Categories: categories,
 		PostsData: PostsData{
-			Posts:        posts,
-			IsAdmin:      isAdmin,
-			HasNextPages: false,
-			NextOffset:   len(posts),
+			SelectedCategoryID: categoryID,
+			Posts:              posts,
+			IsAdmin:            isAdmin,
+			HasNextPages:       false,
+			NextOffset:         len(posts),
 		},
 	}
 
@@ -89,7 +97,14 @@ func (s *Server) posts(w http.ResponseWriter, r *http.Request) {
 		offset = 0
 	}
 
-	params := domain.SelectPostsParams{Limit: s.pageLimit + 1, Offset: offset, IsAdmin: isAdmin}
+	categoryIDStr := r.URL.Query().Get("category_id")
+
+	categoryID, err := strconv.Atoi(categoryIDStr)
+	if err != nil {
+		categoryID = 0
+	}
+
+	params := domain.SelectPostsParams{Limit: s.pageLimit + 1, Offset: offset, IsAdmin: isAdmin, CategoryID: categoryID}
 
 	posts, err := s.Blog.Posts(r.Context(), params)
 	if err != nil {
@@ -101,10 +116,11 @@ func (s *Server) posts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tmplData := PostsData{
-		Posts:        posts,
-		IsAdmin:      isAdmin,
-		HasNextPages: false,
-		NextOffset:   offset + len(posts),
+		SelectedCategoryID: categoryID,
+		Posts:              posts,
+		IsAdmin:            isAdmin,
+		HasNextPages:       false,
+		NextOffset:         offset + len(posts),
 	}
 
 	if len(posts) == s.pageLimit+1 {
@@ -136,25 +152,27 @@ func (s *Server) postPage(w http.ResponseWriter, r *http.Request) {
 	tmplContent := template.HTML(content)
 
 	tmplData := struct {
-		ID          int
-		Title       string
-		Description string
-		Content     template.HTML
-		Slug        string
-		CreatedAt   string
-		UpdatedAt   string
-		IsPublished bool
-		IsAdmin     bool
+		ID           int
+		Title        string
+		Description  string
+		Content      template.HTML
+		Slug         string
+		CategoryName string
+		CreatedAt    string
+		UpdatedAt    string
+		IsPublished  bool
+		IsAdmin      bool
 	}{
-		ID:          post.ID,
-		Title:       post.Title,
-		Description: post.Description,
-		Content:     tmplContent,
-		Slug:        post.Slug,
-		CreatedAt:   post.CreatedAt.Format("02.01.2006"),
-		UpdatedAt:   post.UpdatedAt.Format("02.01.2006"),
-		IsPublished: post.IsPublished,
-		IsAdmin:     isAdmin,
+		ID:           post.ID,
+		Title:        post.Title,
+		Description:  post.Description,
+		Content:      tmplContent,
+		Slug:         post.Slug,
+		CategoryName: post.CategoryName,
+		CreatedAt:    post.CreatedAt.Format("02.01.2006"),
+		UpdatedAt:    post.UpdatedAt.Format("02.01.2006"),
+		IsPublished:  post.IsPublished,
+		IsAdmin:      isAdmin,
 	}
 
 	w.WriteHeader(http.StatusOK)

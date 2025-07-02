@@ -18,6 +18,7 @@ import (
 
 type PostRepository interface {
 	All(ctx context.Context, limit int, offset int, publishedOnly bool) ([]*domain.Post, error)
+	AllWithCategory(ctx context.Context, limit int, offset int, publishedOnly bool, categoryID int) ([]*domain.Post, error)
 	Find(ctx context.Context, id int) (*domain.Post, error)
 	FindBySlug(ctx context.Context, slug string) (*domain.Post, error)
 	Create(ctx context.Context, post *domain.Post) error
@@ -48,9 +49,20 @@ func New(log *slog.Logger, posts PostRepository, imgReplacer ImageProcessor, cat
 func (b *Blog) Posts(ctx context.Context, params domain.SelectPostsParams) ([]*domain.Post, error) {
 	publishedOnly := !params.IsAdmin
 
-	posts, err := b.PostsRepo.All(ctx, params.Limit, params.Offset, publishedOnly)
-	if err != nil {
-		return nil, fmt.Errorf("can't process all posts in service: %w", err)
+	var posts []*domain.Post
+
+	var err error
+
+	if params.CategoryID == 0 {
+		posts, err = b.PostsRepo.All(ctx, params.Limit, params.Offset, publishedOnly)
+		if err != nil {
+			return nil, fmt.Errorf("can't process all posts in service: %w", err)
+		}
+	} else {
+		posts, err = b.PostsRepo.AllWithCategory(ctx, params.Limit, params.Offset, publishedOnly, params.CategoryID)
+		if err != nil {
+			return nil, fmt.Errorf("can't process all posts in service: %w", err)
+		}
 	}
 
 	return posts, nil

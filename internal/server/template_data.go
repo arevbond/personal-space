@@ -8,8 +8,9 @@ type PostsPageData struct {
 }
 
 type PostsData struct {
-	Posts        []*domain.Post
-	IsAdmin      bool
-	HasNextPages bool
-	NextOffset   int
+	SelectedCategoryID int
+	Posts              []*domain.Post
+	IsAdmin            bool
+	HasNextPages       bool
+	NextOffset         int
 }
