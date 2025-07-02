@@ -10,8 +10,23 @@
     {{ template "navbar.html" }}
 
     <div class="row">
+        <!-- Колонка с категориями -->
+        <div class="col-md-4 order-1 order-md-2">
+            <div class="card mb-3">
+                <div class="card-header bg-light">
+                    <strong>Категории</strong>
+                </div>
+                <ul class="list-group list-group-flush">
+                    {{ range .Categories }}
+                    <li class="list-group-item {{ if eq .ID ($.SelectedCategoryID) }} active {{end}}"><a class="text-decoration-none text-reset"
+                                                                                                         href="/blog/posts?category_id={{ .ID }}">{{ .Name }}</a></li>
+                    {{ end }}
+                </ul>
+            </div>
+        </div>
+
         <!-- Основная колонка с постами -->
-        <div class="col-md-8">
+        <div class="col-md-8 order-2 order-md-1">
             {{ if .IsAdmin }}
             <a href="/blog/posts/form" class="btn btn-success mb-3">Опубликовать пост</a>
             {{ end }}
@@ -55,21 +70,6 @@
                      hx-target="#pagination" hx-swap="outerHTML" class="btn btn-outline-primary">Load More</button>
                 </div>
                 {{ end }}
-            </div>
-        </div>
-
-        <!-- Боковая колонка -->
-        <div class="col-md-4">
-            <div class="card mb-3">
-                <div class="card-header bg-light">
-                    <strong>Категории</strong>
-                </div>
-                <ul class="list-group list-group-flush">
-                    {{ range .Categories }}
-                        <li class="list-group-item {{ if eq .ID ($.SelectedCategoryID) }} active {{end}}"><a class="text-decoration-none text-reset"
-                          href="/blog/posts?category_id={{ .ID }}">{{ .Name }}</a></li>
-                    {{ end }}
-                </ul>
             </div>
         </div>
     </div>
