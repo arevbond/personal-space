@@ -8,12 +8,26 @@
 <body>
 <main class="container">
     {{ template "navbar.html" }}
-    <h1>Nikita Bondarev</h1>
-    <div class="grid">
-        <ul>
-            <li><a href="mailto:bondarev.n17@yandex.ru">email</a></li>
-            <li><a href="https://github.com/arevbond">github</a></li>
-        </ul>
+
+    <div class="profile-section">
+        <!-- Photo placeholder - replace with your actual photo -->
+        <img src="/static/profile.jpg" alt="Nikita Bondarev" class="profile-photo" />
+
+        <h1 class="name-title">Nikita Bondarev</h1>
+        <p class="subtitle">Personal Space</p>
+
+        <div class="about-text">
+            <p>Привет! Меня зовут Никита.</p>
+
+            <p>Если хочешь поговорить о коде, обсудить интересную книгу или просто познакомиться — буду рад!</p>
+        </div>
+
+        <div class="contact-links">
+            <a href="mailto:bondarev.n17@yandex.ru">✉️ Email</a>
+            <a href="https://github.com/arevbond" target="_blank">👨‍💻 GitHub</a>
+            <a href="/blog/posts">📝 Блог</a>
+<!--            <a href="https://t.me/yourusername" target="_blank">💬 Telegram</a>-->
+        </div>
     </div>
 </main>
 </body>
