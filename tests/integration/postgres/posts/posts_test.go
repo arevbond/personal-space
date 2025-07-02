@@ -146,6 +146,7 @@ func (s *StorageSuite) TestCreate() {
 				Title:       "title",
 				Description: "desc",
 				Content:     []byte("1110"),
+				CategoryID:  1,
 				Extension:   ".md",
 				CreatedAt:   time.Now(),
 				UpdatedAt:   time.Now(),
