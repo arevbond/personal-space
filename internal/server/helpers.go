@@ -18,3 +18,9 @@ func (s *Server) renderTemplate(w http.ResponseWriter, templateName string, data
 		return
 	}
 }
+
+func (s *Server) renderError(w http.ResponseWriter, errorMsg string, err error, statusCode int) {
+	s.log.Error(errorMsg, slog.Any("error", err))
+
+	http.Error(w, errorMsg, statusCode)
+}

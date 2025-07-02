@@ -60,9 +60,9 @@
                     <strong>Категории</strong>
                 </div>
                 <ul class="list-group list-group-flush">
-                    <li class="list-group-item">Books</li>
-                    <li class="list-group-item">Tech</li>
-                    <li class="list-group-item">Personal</li>
+                    {{ range .Categories }}
+                        <li class="list-group-item"><a class="text-decoration-none text-reset" href="">{{ .Name }}</a></li>
+                    {{ end }}
                 </ul>
             </div>
         </div>

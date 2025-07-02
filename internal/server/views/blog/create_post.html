@@ -38,6 +38,11 @@
                             <textarea class="form-control" id="description" name="description" rows="2"></textarea>
                         </div>
 
+                        <div class="mb-3">
+                            <label for="categories-select" class="form-label">Категория</label>
+                            {{ template "all_categories" . }}
+                        </div>
+
                         <div class="mb-4">
                             <label for="formFile" class="form-label">Содержимое в Markdown</label>
                             <input class="form-control" type="file" id="formFile" name="file" accept=".md" required>
@@ -61,7 +66,14 @@
     </div>
 </main>
 
-<!-- Bootstrap 5.3 JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
+{{ define "all_categories" }}
+<select id="categories-select" class="form-select" aria-label="select category" name="category_id">
+    {{ range .Categories }}
+        <option value="{{ .ID }}">{{ .Name }}</option>
+    {{ end }}
+</select>
+{{ end }}

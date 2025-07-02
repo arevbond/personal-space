@@ -10,8 +10,9 @@ import (
 )
 
 func NewBlogModule(log *slog.Logger, db *sqlx.DB) *service.Blog {
-	repo := storage.NewPostsRepo(log, db)
+	postsRepo := storage.NewPostsRepo(log, db)
 	imageProcessor := processor.NewImageProcessor(log)
+	categoryRepo := storage.NewCategoriesRepo(log, db)
 
-	return service.New(log, repo, imageProcessor)
+	return service.New(log, postsRepo, imageProcessor, categoryRepo)
 }

@@ -26,6 +26,10 @@ type PostRepository interface {
 	SetPublicationStatus(ctx context.Context, id int, isPublished bool) error
 }
 
+type CategoriesRepository interface {
+	All(ctx context.Context) ([]*domain.Category, error)
+}
+
 type ImageProcessor interface {
 	AddPrefix(content []byte, prefix string) ([]byte, error)
 }
@@ -33,11 +37,12 @@ type ImageProcessor interface {
 type Blog struct {
 	log            *slog.Logger
 	PostsRepo      PostRepository
+	CategoriesRepo CategoriesRepository
 	ImageProcessor ImageProcessor
 }
 
-func New(log *slog.Logger, posts PostRepository, imgReplacer ImageProcessor) *Blog {
-	return &Blog{log: log, PostsRepo: posts, ImageProcessor: imgReplacer}
+func New(log *slog.Logger, posts PostRepository, imgReplacer ImageProcessor, categoryRepo CategoriesRepository) *Blog {
+	return &Blog{log: log, PostsRepo: posts, ImageProcessor: imgReplacer, CategoriesRepo: categoryRepo}
 }
 
 func (b *Blog) Posts(ctx context.Context, limit, offset int, isAdmin bool) ([]*domain.Post, error) {
@@ -63,13 +68,13 @@ func (b *Blog) Post(ctx context.Context, id int) (*domain.Post, error) {
 func (b *Blog) PostBySlug(ctx context.Context, slug string) (*domain.Post, error) {
 	post, err := b.PostsRepo.FindBySlug(ctx, slug)
 	if err != nil {
-		return nil, fmt.Errorf("can't process post by id in service: %w", err)
+		return nil, fmt.Errorf("can't process post by slug in service: %w", err)
 	}
 
 	return post, nil
 }
 
-func (b *Blog) CreatePost(ctx context.Context, params domain.PostParams) (*domain.Post, error) {
+func (b *Blog) CreatePost(ctx context.Context, params domain.CreatePostParams) (*domain.Post, error) {
 	if params.Title == "" {
 		params.Title = strings.TrimSuffix(params.Filename, filepath.Ext(params.Filename))
 	}
@@ -88,15 +93,17 @@ func (b *Blog) CreatePost(ctx context.Context, params domain.PostParams) (*domai
 
 	for i := 1; i <= 100; i++ {
 		post := &domain.Post{
-			ID:          0,
-			Title:       params.Title,
-			Description: params.Description,
-			Content:     contentWithCorrectImages,
-			Extension:   filepath.Ext(params.Filename),
-			IsPublished: params.IsPublished,
-			Slug:        b.covertTitleToSlug(baseSlug, i),
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
+			ID:           0,
+			Title:        params.Title,
+			Description:  params.Description,
+			Content:      contentWithCorrectImages,
+			Extension:    filepath.Ext(params.Filename),
+			IsPublished:  params.IsPublished,
+			CategoryID:   params.CategoryID,
+			CategoryName: "", // не используется при создании нового поста
+			Slug:         b.covertTitleToSlug(baseSlug, i),
+			CreatedAt:    time.Now(),
+			UpdatedAt:    time.Now(),
 		}
 
 		lastError = b.PostsRepo.Create(ctx, post)
@@ -228,4 +235,13 @@ func (b *Blog) ChangePublishStatus(ctx context.Context, id int, curPublishStatus
 	}
 
 	return nil
+}
+
+func (b *Blog) Categories(ctx context.Context) ([]*domain.Category, error) {
+	categories, err := b.CategoriesRepo.All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("blog: %w", err)
+	}
+
+	return categories, nil
 }

@@ -16,9 +16,11 @@ type Blog interface {
 	Posts(ctx context.Context, limit, offset int, isAdmin bool) ([]*domain.Post, error)
 	Post(ctx context.Context, id int) (*domain.Post, error)
 	PostBySlug(ctx context.Context, slug string) (*domain.Post, error)
-	CreatePost(ctx context.Context, params domain.PostParams) (*domain.Post, error)
+	CreatePost(ctx context.Context, params domain.CreatePostParams) (*domain.Post, error)
 	DeletePost(ctx context.Context, id int) error
 	ChangePublishStatus(ctx context.Context, id int, curPublishStatus bool) error
+
+	Categories(ctx context.Context) ([]*domain.Category, error)
 
 	MdToHTML(md []byte) []byte
 }
@@ -47,11 +49,23 @@ func (s *Server) postsPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	categories, err := s.Blog.Categories(r.Context())
+	if err != nil {
+		s.log.Error("all categories handler", slog.Any("error", err))
+
+		http.Error(w, "can't get categories", http.StatusInternalServerError)
+
+		return
+	}
+
 	tmplData := PostsPageData{
-		Posts:        posts,
-		IsAdmin:      isAdmin,
-		HasNextPages: false,
-		NextOffset:   len(posts),
+		Categories: categories,
+		PostsData: PostsData{
+			Posts:        posts,
+			IsAdmin:      isAdmin,
+			HasNextPages: false,
+			NextOffset:   len(posts),
+		},
 	}
 
 	if len(posts) == s.pageLimit+1 {
@@ -84,7 +98,7 @@ func (s *Server) posts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmplData := PostsPageData{
+	tmplData := PostsData{
 		Posts:        posts,
 		IsAdmin:      isAdmin,
 		HasNextPages: false,
@@ -109,7 +123,7 @@ func (s *Server) postPage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		s.log.Error("can't process service post method", slog.Any("error", err))
 
-		http.Error(w, "can't find post by id", http.StatusBadRequest)
+		http.Error(w, "can't find post by slug", http.StatusBadRequest)
 
 		return
 	}
@@ -147,7 +161,22 @@ func (s *Server) postPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) createPostPage(w http.ResponseWriter, r *http.Request) {
-	s.renderTemplate(w, "create_post.html", nil)
+	categories, err := s.Blog.Categories(r.Context())
+	if err != nil {
+		s.log.Error("all categories handler", slog.Any("error", err))
+
+		http.Error(w, "can't get categories", http.StatusInternalServerError)
+
+		return
+	}
+
+	tmplData := struct {
+		Categories []*domain.Category
+	}{
+		Categories: categories,
+	}
+
+	s.renderTemplate(w, "create_post.html", tmplData)
 }
 
 func (s *Server) createPost(w http.ResponseWriter, r *http.Request) {
@@ -165,15 +194,20 @@ func (s *Server) createPost(w http.ResponseWriter, r *http.Request) {
 	title := r.FormValue("title")
 	slug := r.FormValue("slug")
 	description := r.FormValue("description")
+	categoryIDStr := r.FormValue("category_id")
 
-	s.log.Debug("create post handler", slog.String("title", title),
-		slog.String("description", description))
+	categoryID, err := strconv.Atoi(categoryIDStr)
+	if err != nil {
+		s.renderError(w, "invalid category id", err, http.StatusBadRequest)
+
+		return
+	}
+
+	s.log.Debug("create post handler", slog.String("title", title), slog.String("desc", description))
 
 	file, header, err := r.FormFile("file")
 	if err != nil {
-		s.log.Warn("can't get file", slog.Any("error", err))
-
-		http.Error(w, "can't get file from form", http.StatusBadRequest)
+		s.renderError(w, "can't get file", err, http.StatusBadRequest)
 
 		return
 	}
@@ -181,27 +215,24 @@ func (s *Server) createPost(w http.ResponseWriter, r *http.Request) {
 
 	content, err := io.ReadAll(file)
 	if err != nil {
-		s.log.Error("can't read file", slog.Any("error", err))
-
-		http.Error(w, "can't read file", http.StatusInternalServerError)
+		s.renderError(w, "can't read file", err, http.StatusInternalServerError)
 
 		return
 	}
 
-	postParms := domain.PostParams{
+	postParms := domain.CreatePostParams{
 		Title:       title,
 		Slug:        slug,
 		Description: description,
 		Filename:    header.Filename,
+		CategoryID:  categoryID,
 		Content:     content,
 		IsPublished: false,
 	}
 
 	post, err := s.Blog.CreatePost(r.Context(), postParms)
 	if err != nil {
-		s.log.Error("can't create post", slog.Any("error", err))
-
-		http.Error(w, "can't create post", http.StatusInternalServerError)
+		s.renderError(w, "can't create post", err, http.StatusInternalServerError)
 
 		return
 	}

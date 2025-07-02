@@ -27,8 +27,10 @@ func NewPostsRepo(log *slog.Logger, db *sqlx.DB) *Posts {
 
 func (p *Posts) All(ctx context.Context, limit int, offset int, publishedOnly bool) ([]*domain.Post, error) {
 	query := `
-		SELECT id, title, description, content, extension, slug, is_published, created_at, updated_at
-		FROM posts
+		SELECT p.id, title, description, content, extension, slug, is_published, category_id, 
+		       c.name as category_name, created_at, updated_at
+		FROM posts p
+		LEFT JOIN categories c ON category_id = c.id
 		WHERE ($3 = false OR is_published = true)
 		ORDER BY created_at DESC
 		LIMIT $1 OFFSET $2;`
@@ -45,8 +47,10 @@ func (p *Posts) All(ctx context.Context, limit int, offset int, publishedOnly bo
 
 func (p *Posts) Find(ctx context.Context, postID int) (*domain.Post, error) {
 	query := `
-		SELECT id, title, description, content, extension, slug, is_published, created_at, updated_at
-		FROM posts
+		SELECT p.id, title, description, content, extension, slug, is_published, category_id, 
+		       c.name as category_name, created_at, updated_at
+		FROM posts p
+		LEFT JOIN categories c ON p.category_id = c.id
 		WHERE id = $1;`
 
 	var post domain.Post
@@ -61,8 +65,10 @@ func (p *Posts) Find(ctx context.Context, postID int) (*domain.Post, error) {
 
 func (p *Posts) FindBySlug(ctx context.Context, slug string) (*domain.Post, error) {
 	query := `
-		SELECT id, title, description, content, extension, slug, is_published, created_at, updated_at
-		FROM posts
+		SELECT p.id, title, description, content, extension, slug, is_published, category_id,
+		       c.name as category_name, created_at, updated_at
+		FROM posts p
+		INNER JOIN categories c ON p.category_id = c.id
 		WHERE slug = $1;`
 
 	var post domain.Post
@@ -77,12 +83,13 @@ func (p *Posts) FindBySlug(ctx context.Context, slug string) (*domain.Post, erro
 
 func (p *Posts) Create(ctx context.Context, post *domain.Post) error {
 	query := `
-		INSERT INTO posts (title, description, content, extension, slug, is_published, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		INSERT INTO posts (title, description, content, extension, slug, is_published, 
+		                   category_id, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 		RETURNING id;`
 
 	args := []any{post.Title, post.Description, post.Content, post.Extension, post.Slug,
-		post.IsPublished, post.CreatedAt, post.UpdatedAt}
+		post.IsPublished, post.CategoryID, post.CreatedAt, post.UpdatedAt}
 
 	row := p.DB.QueryRowContext(ctx, query, args...)
 	if err := row.Scan(&post.ID); err != nil {
