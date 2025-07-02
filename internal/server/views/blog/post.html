@@ -9,9 +9,8 @@
 <main class="container">
     {{ template "navbar.html" }}
 
-    <article class="mb-5">
-        <h1 class="mb-3 d-flex align-items-center justify-content-between">
-            <span>{{ .Title }}</span>
+    <article class="post-content mb-5">
+        <h2 class="mb-3 d-flex align-items-center justify-content-between"><span>{{ .Title }}</span>
             {{ if .IsAdmin }}
             <span class="btn-group">
                 <button type="button" class="btn btn-outline-primary btn-sm" title="Редактировать">
@@ -32,8 +31,7 @@
                 </button>
             </span>
             {{ end }}
-        </h1>
-
+        </h2>
         {{ if .IsAdmin }}
         <div class="mb-2">
             {{ if .IsPublished }}
@@ -62,13 +60,15 @@
             </div>
             {{ end }}
         </div>
+
+
+        <div class="mt-4 mb-5">
+            <a href="/blog/posts" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Назад ко всем постам
+            </a>
+        </div>
     </article>
 
-    <div class="mt-4 mb-5">
-        <a href="/blog/posts" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Назад ко всем постам
-        </a>
-    </div>
 </main>
 
 {{ template "footer.html" }}

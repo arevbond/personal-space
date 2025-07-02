@@ -23,14 +23,13 @@
                     {{ end }}
                 </ul>
             </div>
+            {{ if .IsAdmin }}
+            <a href="/blog/posts/form" class="btn btn-success mb-3">Опубликовать пост</a>
+            {{ end }}
         </div>
 
         <!-- Основная колонка с постами -->
         <div class="col-md-8 order-2 order-md-1">
-            {{ if .IsAdmin }}
-            <a href="/blog/posts/form" class="btn btn-success mb-3">Опубликовать пост</a>
-            {{ end }}
-
             {{ range .Posts }}
             <div class="card mb-3 shadow-sm">
                 <div class="card-body">
