@@ -1,5 +1,8 @@
 body {
     padding-top: 70px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
 pre code.language-go {
@@ -83,3 +86,11 @@ article .border-top {
 }
 
 /* END INDEX PAGE */
+
+main {
+    flex: 1;
+}
+
+footer {
+    margin-top: auto;
+}
