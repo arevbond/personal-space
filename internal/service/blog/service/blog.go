@@ -45,10 +45,10 @@ func New(log *slog.Logger, posts PostRepository, imgReplacer ImageProcessor, cat
 	return &Blog{log: log, PostsRepo: posts, ImageProcessor: imgReplacer, CategoriesRepo: categoryRepo}
 }
 
-func (b *Blog) Posts(ctx context.Context, limit, offset int, isAdmin bool) ([]*domain.Post, error) {
-	publishedOnly := !isAdmin
+func (b *Blog) Posts(ctx context.Context, params domain.SelectPostsParams) ([]*domain.Post, error) {
+	publishedOnly := !params.IsAdmin
 
-	posts, err := b.PostsRepo.All(ctx, limit, offset, publishedOnly)
+	posts, err := b.PostsRepo.All(ctx, params.Limit, params.Offset, publishedOnly)
 	if err != nil {
 		return nil, fmt.Errorf("can't process all posts in service: %w", err)
 	}

@@ -23,7 +23,7 @@ type Category struct {
 	Name string `db:"name"`
 }
 
-type SelectPostParams struct {
+type SelectPostsParams struct {
 	Limit      int
 	Offset     int
 	IsAdmin    bool

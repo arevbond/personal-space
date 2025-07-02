@@ -13,7 +13,7 @@ import (
 )
 
 type Blog interface {
-	Posts(ctx context.Context, limit, offset int, isAdmin bool) ([]*domain.Post, error)
+	Posts(ctx context.Context, params domain.SelectPostsParams) ([]*domain.Post, error)
 	Post(ctx context.Context, id int) (*domain.Post, error)
 	PostBySlug(ctx context.Context, slug string) (*domain.Post, error)
 	CreatePost(ctx context.Context, params domain.CreatePostParams) (*domain.Post, error)
@@ -40,7 +40,9 @@ func (s *Server) registerBlogRoutes(mux *http.ServeMux) {
 func (s *Server) postsPage(w http.ResponseWriter, r *http.Request) {
 	isAdmin := r.Context().Value(middleware.IsAdminKey) != nil
 
-	posts, err := s.Blog.Posts(r.Context(), s.pageLimit+1, 0, isAdmin)
+	params := domain.SelectPostsParams{Limit: s.pageLimit + 1, Offset: 0, IsAdmin: isAdmin}
+
+	posts, err := s.Blog.Posts(r.Context(), params)
 	if err != nil {
 		s.log.Error("can't get posts from db", slog.Any("error", err))
 
@@ -87,7 +89,9 @@ func (s *Server) posts(w http.ResponseWriter, r *http.Request) {
 		offset = 0
 	}
 
-	posts, err := s.Blog.Posts(r.Context(), s.pageLimit+1, offset, isAdmin)
+	params := domain.SelectPostsParams{Limit: s.pageLimit + 1, Offset: offset, IsAdmin: isAdmin}
+
+	posts, err := s.Blog.Posts(r.Context(), params)
 	if err != nil {
 		s.log.Error("can't get posts from db", slog.Any("error", err))
 
