@@ -33,7 +33,7 @@ func (s *Server) registerBlogRoutes(mux *http.ServeMux) {
 	mux.Handle("GET /blog/posts/form", middleware.RequireAuth(s.Auth, s.log)(http.HandlerFunc(s.createPostPage)))
 	mux.Handle("POST /blog/posts", middleware.RequireAuth(s.Auth, s.log)(http.HandlerFunc(s.createPost)))
 	mux.Handle("DELETE /blog/posts/{id}", middleware.RequireAuth(s.Auth, s.log)(http.HandlerFunc(s.deletePost)))
-	mux.Handle("POST /blog/posts/{id}/toggle-publication",
+	mux.Handle("PATCH /blog/posts/{id}/toggle-publication",
 		middleware.RequireAuth(s.Auth, s.log)(http.HandlerFunc(s.togglePostPublication)))
 }
 
