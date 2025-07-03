@@ -39,3 +39,12 @@ type CreatePostParams struct {
 	IsPublished bool
 	Content     []byte
 }
+
+type UpdatePostParams struct {
+	ID          int
+	Title       string
+	Slug        string
+	Description string
+	CategoryID  int
+	Content     []byte
+}

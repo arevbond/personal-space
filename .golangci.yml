@@ -104,6 +104,9 @@ linters:
     - wrapcheck
     - wsl_v5
   settings:
+    funlen:
+      lines: 80
+      statements: 50
     wsl_v5:
       allow-first-in-block: true
       allow-whole-block: false

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/arevbond/arevbond-blog/internal/service/blog/domain"
 	"github.com/arevbond/arevbond-blog/internal/service/errs"
@@ -51,7 +52,7 @@ func (p *Posts) Find(ctx context.Context, postID int) (*domain.Post, error) {
 		       c.name as category_name, created_at, updated_at
 		FROM posts p
 		LEFT JOIN categories c ON p.category_id = c.id
-		WHERE id = $1;`
+		WHERE p.id = $1;`
 
 	var post domain.Post
 
@@ -107,6 +108,31 @@ func (p *Posts) Create(ctx context.Context, post *domain.Post) error {
 	return nil
 }
 
+func (p *Posts) Update(ctx context.Context, params domain.UpdatePostParams) error {
+	query := `UPDATE posts
+			  SET title = $1,
+    			  slug = $2,
+    			  description = $3,
+    			  category_id = $4,
+    			  content = $5,
+    			  updated_at = $6
+              WHERE id = $7`
+
+	args := []any{params.Title, params.Slug, params.Description, params.CategoryID, params.Content, time.Now(), params.ID}
+
+	result, err := p.DB.ExecContext(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("can't update post: %w", err)
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return fmt.Errorf("post with id %d for update: %w", params.ID, errs.ErrNotFound)
+	}
+
+	return nil
+}
+
 func (p *Posts) SetPublicationStatus(ctx context.Context, postID int, isPublished bool) error {
 	query := `UPDATE posts
 				SET is_published = $1
@@ -121,7 +147,7 @@ func (p *Posts) SetPublicationStatus(ctx context.Context, postID int, isPublishe
 
 	rowsAffected, _ := result.RowsAffected()
 	if rowsAffected == 0 {
-		return fmt.Errorf("post with id %d: %w", postID, errs.ErrNotFound)
+		return fmt.Errorf("post with id %d for create: %w", postID, errs.ErrNotFound)
 	}
 
 	return nil

@@ -17,6 +17,7 @@ type Blog interface {
 	Post(ctx context.Context, id int) (*domain.Post, error)
 	PostBySlug(ctx context.Context, slug string) (*domain.Post, error)
 	CreatePost(ctx context.Context, params domain.CreatePostParams) (*domain.Post, error)
+	UpdatePost(ctx context.Context, params domain.UpdatePostParams) error
 	DeletePost(ctx context.Context, id int) error
 	ChangePublishStatus(ctx context.Context, id int, curPublishStatus bool) error
 
@@ -30,8 +31,10 @@ func (s *Server) registerBlogRoutes(mux *http.ServeMux) {
 	mux.Handle("GET /blog/posts/more", middleware.OptionalAuth(s.Auth, s.log)(http.HandlerFunc(s.posts)))
 	mux.Handle("GET /blog/posts/{slug}", middleware.OptionalAuth(s.Auth, s.log)(http.HandlerFunc(s.postPage)))
 
-	mux.Handle("GET /blog/posts/form", middleware.RequireAuth(s.Auth, s.log)(http.HandlerFunc(s.createPostPage)))
+	mux.Handle("GET /blog/posts/form-create", middleware.RequireAuth(s.Auth, s.log)(http.HandlerFunc(s.createPostPage)))
 	mux.Handle("POST /blog/posts", middleware.RequireAuth(s.Auth, s.log)(http.HandlerFunc(s.createPost)))
+	mux.Handle("GET /blog/posts/form-update", middleware.RequireAuth(s.Auth, s.log)(http.HandlerFunc(s.updatePostPage)))
+	mux.Handle("PUT /blog/posts", middleware.RequireAuth(s.Auth, s.log)(http.HandlerFunc(s.updatePost)))
 	mux.Handle("DELETE /blog/posts/{id}", middleware.RequireAuth(s.Auth, s.log)(http.HandlerFunc(s.deletePost)))
 	mux.Handle("PATCH /blog/posts/{id}/toggle-publication",
 		middleware.RequireAuth(s.Auth, s.log)(http.HandlerFunc(s.togglePostPublication)))
@@ -195,6 +198,113 @@ func (s *Server) createPostPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.renderTemplate(w, "create_post.html", tmplData)
+}
+
+func (s *Server) updatePostPage(w http.ResponseWriter, r *http.Request) {
+	postIDStr := r.URL.Query().Get("post_id")
+
+	postID, err := strconv.Atoi(postIDStr)
+	if err != nil {
+		s.renderError(w, "invalid post id", err, http.StatusBadRequest)
+
+		return
+	}
+
+	post, err := s.Blog.Post(r.Context(), postID)
+	if err != nil {
+		s.renderError(w, "can't get post", err, http.StatusInternalServerError)
+
+		return
+	}
+
+	categories, err := s.Blog.Categories(r.Context())
+	if err != nil {
+		s.renderError(w, "can't get categories", err, http.StatusInternalServerError)
+
+		return
+	}
+
+	tmplData := struct {
+		Categories []*domain.Category
+		Post       *domain.Post
+	}{
+		Categories: categories,
+		Post:       post,
+	}
+
+	s.renderTemplate(w, "update_post.html", tmplData)
+}
+
+func (s *Server) updatePost(w http.ResponseWriter, r *http.Request) {
+	postIDStr := r.URL.Query().Get("post_id")
+
+	postID, err := strconv.Atoi(postIDStr)
+	if err != nil {
+		s.renderError(w, "invalid post id", err, http.StatusBadRequest)
+
+		return
+	}
+
+	post, err := s.Blog.Post(r.Context(), postID)
+	if err != nil {
+		s.renderError(w, "can't get post", err, http.StatusBadRequest)
+
+		return
+	}
+
+	const maxRequestSize = 1_000_000 // 1MB
+	if err = r.ParseMultipartForm(maxRequestSize); err != nil {
+		s.renderError(w, "can't parse file", err, http.StatusBadRequest)
+
+		return
+	}
+
+	title := r.FormValue("title")
+	slug := r.FormValue("slug")
+	description := r.FormValue("description")
+	categoryIDStr := r.FormValue("category_id")
+
+	categoryID, err := strconv.Atoi(categoryIDStr)
+	if err != nil {
+		s.renderError(w, "invalid category id", err, http.StatusBadRequest)
+
+		return
+	}
+
+	var content []byte
+
+	file, _, err := r.FormFile("file")
+	if err == nil {
+		defer file.Close()
+
+		content, err = io.ReadAll(file)
+		if err != nil {
+			s.renderError(w, "can't read file", err, http.StatusInternalServerError)
+
+			return
+		}
+	} else {
+		content = post.Content
+	}
+
+	postParms := domain.UpdatePostParams{
+		ID:          post.ID,
+		Title:       title,
+		Slug:        slug,
+		Description: description,
+		CategoryID:  categoryID,
+		Content:     content,
+	}
+
+	err = s.Blog.UpdatePost(r.Context(), postParms)
+	if err != nil {
+		s.renderError(w, "can't update post", err, http.StatusInternalServerError)
+
+		return
+	}
+
+	w.Header().Set("HX-Redirect", "/blog/posts/"+slug)
+	w.WriteHeader(http.StatusOK)
 }
 
 func (s *Server) createPost(w http.ResponseWriter, r *http.Request) {

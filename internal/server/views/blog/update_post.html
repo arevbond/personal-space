@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css" rel="stylesheet">
+    {{ template "heads.html" }}
+    <title>Новая запись — Arevbond Blog</title>
+</head>
+<body>
+<main class="container py-4">
+    {{ template "navbar.html" }}
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h3 class="card-title text-center mb-4">
+                        <i class="bi bi-pencil-square me-2"></i>Обновить запись
+                    </h3>
+
+                    <form hx-put="/blog/posts?post_id={{ $.Post.ID }}" enctype="multipart/form-data">
+
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Название</label>
+                            <input type="text" class="form-control" id="title" name="title" value="{{ $.Post.Title }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Slug</label>
+                            <input type="text" class="form-control" id="slug" name="slug" value="{{ $.Post.Slug }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Краткое описание</label>
+                            <textarea class="form-control" id="description" name="description" rows="2">{{ $.Post.Description }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="categories-select" class="form-label">Категория</label>
+                            <select id="categories-select" class="form-select" aria-label="select category" name="category_id">
+                                {{ range .Categories }}
+                                    <option value="{{ .ID }}" {{ if eq .ID $.Post.CategoryID }}selected{{ end }}>{{ .Name }}</option>
+                                {{ end }}
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="formFile" class="form-label">Содержимое в Markdown</label>
+
+                            <!-- Show current file info -->
+                            {{ if $.Post.Content }}
+                            <div class="alert alert-info mb-2">
+                                <i class="bi bi-file-earmark-text me-2"></i>
+                                <strong>Текущий файл:</strong> {{ len $.Post.Content }} байт
+                            </div>
+                            {{ end }}
+
+                            <!-- File input for new file -->
+                            <input class="form-control" type="file" id="formFile" name="file" accept=".md">
+                            <div class="form-text">Оставьте пустым, чтобы сохранить текущий файл</div>
+                        </div>
+
+                        <div class="d-flex gap-2 mb-3 justify-content-center">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>Обновить
+                            </button>
+                            <button type="button" class="btn btn-secondary">
+                                <a class="text-decoration-none text-reset" href="/blog/posts/{{ $.Post.Slug }}"><i class="bi bi-x-circle me-2"></i>Отмена</a>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+{{ template "footer.html" }}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

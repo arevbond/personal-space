@@ -22,6 +22,7 @@ type PostRepository interface {
 	Find(ctx context.Context, id int) (*domain.Post, error)
 	FindBySlug(ctx context.Context, slug string) (*domain.Post, error)
 	Create(ctx context.Context, post *domain.Post) error
+	Update(ctx context.Context, params domain.UpdatePostParams) error
 	Delete(ctx context.Context, id int) error
 
 	SetPublicationStatus(ctx context.Context, id int, isPublished bool) error
@@ -214,6 +215,22 @@ func (b *Blog) removeSpecialChars(str string) string {
 	}
 
 	return sb.String()
+}
+
+func (b *Blog) UpdatePost(ctx context.Context, params domain.UpdatePostParams) error {
+	contentWithCorrectImages, err := b.ImageProcessor.AddPrefix(params.Content, "/static/images/")
+	if err != nil {
+		return fmt.Errorf("can't add prefix to image: %w", err)
+	}
+
+	params.Content = contentWithCorrectImages
+
+	err = b.PostsRepo.Update(ctx, params)
+	if err != nil {
+		return fmt.Errorf("service: %w", err)
+	}
+
+	return nil
 }
 
 func (b *Blog) MdToHTML(md []byte) []byte {
