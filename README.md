@@ -1,7 +1,6 @@
 # 🪐 Personal Space
 
 [![Go Version](https://img.shields.io/badge/Go-1.24-blue.svg)](https://golang.org)
-[![Live Demo](https://img.shields.io/badge/demo-online-green)](https://arevbond.ru)
 [![Made with HTMX](https://img.shields.io/badge/HTMX-enabled-blueviolet)](https://htmx.org)
 
 **Personal Space** — это небольшое веб-приложение-песочница для реализации моих идей.
