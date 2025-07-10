@@ -149,6 +149,14 @@ func (s *Server) postPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !isAdmin && !post.IsPublished {
+		s.log.Warn("user find hidden post")
+
+		http.Error(w, "can't find post by slug", http.StatusNotFound)
+
+		return
+	}
+
 	content := s.Blog.MdToHTML(post.Content)
 
 	// #nosec G203 - Content is from trusted markdown stored in database
