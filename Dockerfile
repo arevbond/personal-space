@@ -9,7 +9,7 @@ COPY . .
 
 EXPOSE 8080
 
-RUN apk add --no-cache git
+RUN apt-get update && apt-get install -y git
 
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-X main.version=$(git describe --tags --always)" -o /arevbond ./cmd/arevbond/main.go
 
