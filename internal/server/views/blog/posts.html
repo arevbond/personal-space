@@ -54,7 +54,7 @@
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <p class="card-text mb-0">
-                            <small class="text-muted">{{ .CreatedAt.Format "02.01.2006 15:04" }}</small>
+                            <small class="text-muted">{{ .CreatedAt.Format "02.01.2006" }}</small>
                         </p>
                         {{ if .CategoryName }}
                         <span class="badge bg-light text-dark">{{ .CategoryName }}</span>
@@ -103,7 +103,7 @@
             </div>
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <p class="card-text mb-0">
-                    <small class="text-muted">{{ .CreatedAt.Format "02.01.2006 15:04" }}</small>
+                    <small class="text-muted">{{ .CreatedAt.Format "02.01.2006" }}</small>
                 </p>
                 {{ if .CategoryName }}
                 <span class="badge bg-light text-dark">{{ .CategoryName }}</span>
