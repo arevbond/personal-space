@@ -28,14 +28,12 @@ func main() {
 
 	logger.Debug("http server", slog.Any("config", cfg.Server))
 
-	logger.Info("application started", slog.String("Env", cfg.Env))
+	logger.Info("application started", slog.String("Env", cfg.Env), slog.String("version", version))
 
 	application, err := app.New(logger, cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	logger.Info("app version", slog.String("git tag", version))
 
 	ctx := context.Background()
 
