@@ -14,6 +14,8 @@ import (
 	"github.com/lmittmann/tint"
 )
 
+var version = "unknown"
+
 func main() {
 	flag.Parse()
 
@@ -32,6 +34,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	logger.Info("app version", slog.String("git tag", version))
 
 	ctx := context.Background()
 

@@ -9,7 +9,9 @@ COPY . .
 
 EXPOSE 8080
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /arevbond ./cmd/arevbond/main.go
+RUN apk add --no-cache git
+
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-X main.version=$(git describe --tags --always)" -o /arevbond ./cmd/arevbond/main.go
 
 FROM alpine AS build-release-stage
 
