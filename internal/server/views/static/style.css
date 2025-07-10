@@ -5,8 +5,9 @@ body {
     min-height: 100vh;
 }
 
-pre code.language-go {
-    background-color: #f5f5f5;
+pre code{
+    /*background-color: #f5f5f5;*/
+    background-color: #ffffdd;
     color: #333;
     font-family: 'Fira Code', 'Courier New', monospace;
     font-size: 14px;
@@ -16,6 +17,7 @@ pre code.language-go {
     overflow-x: auto;
     line-height: 1.5;
     white-space: pre;
+    border: 1px solid #d1d5da;
 }
 
 article .border-top {
