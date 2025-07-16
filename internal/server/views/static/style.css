@@ -20,6 +20,11 @@ pre code{
     border: 1px solid #d1d5da;
 }
 
+img {
+    max-width: 100%;
+    height: auto;
+}
+
 article .border-top {
     font-size: 1.1rem;
     line-height: 1.5;
