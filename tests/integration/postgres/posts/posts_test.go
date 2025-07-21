@@ -1,166 +1,199 @@
 package posts
 
 import (
-	"context"
-	"fmt"
-	"log/slog"
-	"os"
-	"path/filepath"
-	"strconv"
-	"testing"
-	"time"
-
 	"github.com/arevbond/arevbond-blog/internal/service/blog/domain"
 	"github.com/arevbond/arevbond-blog/internal/service/blog/storage"
-
-	"github.com/arevbond/arevbond-blog/internal/config"
-	"github.com/arevbond/arevbond-blog/internal/db"
-	"github.com/jmoiron/sqlx"
-	"github.com/pressly/goose"
-	"github.com/stretchr/testify/suite"
-	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/modules/postgres"
-	"github.com/testcontainers/testcontainers-go/wait"
+	"github.com/arevbond/arevbond-blog/internal/service/errs"
+	"time"
 )
 
-type StorageSuite struct {
-	suite.Suite
-	log       *slog.Logger
-	ctx       context.Context
-	container *postgres.PostgresContainer
-	conn      *sqlx.DB
-	repo      *storage.Posts
-}
-
-func TestStorageSuite(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skip integration tests in short mode")
+// insertTestPost - helper function, which create single post in database
+func (s *StorageSuite) insertTestPost(slug string) (*domain.Post, error) {
+	post := &domain.Post{
+		ID:           0,
+		Title:        "title",
+		Description:  "description",
+		Content:      []byte("100001"),
+		Extension:    ".md",
+		Slug:         slug,
+		CategoryID:   1,
+		CategoryName: "Книги",
+		CreatedAt:    time.Date(2005, 1, 1, 1, 0, 0, 0, time.Local),
+		UpdatedAt:    time.Date(2005, 1, 1, 1, 0, 0, 0, time.Local),
 	}
 
-	suite.Run(t, new(StorageSuite))
-}
+	query := `
+		INSERT INTO posts (title, description, content, extension, slug, is_published, 
+		                   category_id, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		RETURNING id;`
 
-func (s *StorageSuite) SetupSuite() {
-	s.log = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelDebug,
-	}))
+	args := []any{post.Title, post.Description, post.Content, post.Extension, post.Slug,
+		post.IsPublished, post.CategoryID, post.CreatedAt, post.UpdatedAt}
 
-	s.ctx = context.Background()
-
-	cfg := config.Storage{
-		DatabaseName: "test_db",
-		User:         "test_user",
-		Password:     "test_password",
+	row := s.conn.QueryRowContext(s.ctx, query, args...)
+	if err := row.Scan(&post.ID); err != nil {
+		return nil, err
 	}
 
-	container, err := postgres.Run(s.ctx, "postgres:17-alpine",
-		postgres.WithDatabase(cfg.DatabaseName),
-		postgres.WithUsername(cfg.User),
-		postgres.WithPassword(cfg.Password),
-		testcontainers.WithWaitStrategy(
-			wait.ForLog("database system is ready to accept connections").
-				WithOccurrence(2).
-				WithStartupTimeout(15*time.Second)),
-	)
-	s.Require().NoError(err)
-	s.container = container
-
-	host, err := s.container.Host(s.ctx)
-	s.Require().NoError(err)
-	cfg.Host = host
-
-	mappedPort, err := s.container.MappedPort(s.ctx, "5432/tcp")
-	s.Require().NoError(err)
-	port, err := strconv.Atoi(mappedPort.Port())
-	s.Require().NoError(err)
-	cfg.Port = port
-
-	s.conn, err = db.NewConn(cfg)
-	s.Require().NoError(err)
-	s.Require().NoError(s.conn.Ping())
-
-	err = migrate(s.conn)
-	s.Require().NoError(err)
-
-	s.repo = storage.NewPostsRepo(s.log, s.conn)
+	return post, nil
 }
 
-func (s *StorageSuite) TearDownSuite() {
-	if s.conn != nil {
-		s.Require().NoError(s.conn.Close())
-	}
-	if s.container != nil {
-		s.Require().NoError(s.container.Terminate(s.ctx))
-	}
-}
+func (s *StorageSuite) TestPostsCreate() {
+	repo := storage.NewPostsRepo(s.log, s.conn)
 
-func (s *StorageSuite) SetupTest() {
-	s.truncateTables()
-}
-
-func (s *StorageSuite) truncateTables() {
-	tables := []string{
-		"posts",
-	}
-
-	for _, table := range tables {
-		_, err := s.conn.ExecContext(s.ctx, fmt.Sprintf("TRUNCATE %s CASCADE;", table))
-		s.Require().NoError(err)
-	}
-}
-
-func migrate(conn *sqlx.DB) error {
-	root := findRootDir()
-	migrationPath := filepath.Join(root, "migrations")
-	_, err := os.Stat(migrationPath)
-	if err != nil {
-		return fmt.Errorf("dir migrations doesn't exists: %w", err)
-	}
-
-	return goose.Up(conn.DB, migrationPath)
-}
-
-func findRootDir() string {
-	dir, _ := os.Getwd()
-	for {
-		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
-			return dir
-		}
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			return ""
-		}
-		dir = parent
-	}
-}
-
-func (s *StorageSuite) TestCreate() {
 	tests := []struct {
-		name string
-		post *domain.Post
+		name          string
+		post          *domain.Post
+		expectedError error
 	}{
 		{
-			name: "success creation post",
+			name: "successfully creates a post",
 			post: &domain.Post{
 				ID:          0,
 				Title:       "title",
 				Description: "desc",
 				Content:     []byte("1110"),
+				Slug:        "slug",
 				CategoryID:  1,
 				Extension:   ".md",
-				CreatedAt:   time.Now(),
-				UpdatedAt:   time.Now(),
+				CreatedAt:   time.Date(2005, 1, 1, 1, 0, 0, 0, time.Local),
+				UpdatedAt:   time.Date(2005, 1, 1, 1, 0, 0, 0, time.Local),
 			},
+		},
+		{
+			name: "duplicate error",
+			post: &domain.Post{
+				ID:          0,
+				Title:       "title2",
+				Description: "desc2",
+				Content:     []byte("11101"),
+				Slug:        "slug",
+				CategoryID:  1,
+				Extension:   ".md",
+			},
+			expectedError: errs.ErrDuplicate,
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			err := s.repo.Create(s.ctx, tt.post)
-			s.Require().NoError(err)
+			err := repo.Create(s.ctx, tt.post)
+			if tt.expectedError == nil {
+				s.Assert().NoError(err)
+				s.Assert().NotEqual(0, tt.post.ID)
 
-			s.Assert().NotEqual(0, tt.post.ID)
+				query := `SELECT p.id, title, description, content, extension, slug, is_published, category_id,
+							   c.name as category_name, created_at, updated_at
+						FROM posts p
+						INNER JOIN categories c ON p.category_id = c.id
+						WHERE p.id = $1; `
+
+				var expectedPost domain.Post
+
+				s.Require().NoError(s.conn.GetContext(s.ctx, &expectedPost, query, tt.post.ID), "should fetch post")
+
+				s.Assert().Equal(expectedPost.Title, tt.post.Title, "title should be equal")
+				s.Assert().Equal(expectedPost.Description, tt.post.Description, "description should be equal")
+				s.Assert().ElementsMatch(expectedPost.Content, tt.post.Content, "content should be equal")
+				s.Assert().Equal(expectedPost.Slug, tt.post.Slug, "slug should be equal")
+				s.Assert().Equal(expectedPost.CategoryID, tt.post.CategoryID, "category id should be equal")
+				s.Assert().Equal(expectedPost.Extension, tt.post.Extension, "extension should be equal")
+				s.Assert().Equal(expectedPost.CreatedAt, tt.post.CreatedAt, "created time should be equal")
+				s.Assert().Equal(expectedPost.UpdatedAt, tt.post.UpdatedAt, "updated time should be equal")
+			} else {
+				s.Require().Error(err)
+				s.Assert().ErrorIs(err, tt.expectedError)
+			}
 		})
 	}
+}
 
+func (s *StorageSuite) TestPostsUpdate() {
+	post, err := s.insertTestPost("slug")
+	s.Require().NoError(err)
+
+	params := domain.UpdatePostParams{
+		ID:          post.ID,
+		Title:       post.Title + "123",
+		Slug:        post.Slug + "123",
+		Description: post.Description + "123",
+		CategoryID:  2,
+		Content:     []byte("123123"),
+	}
+
+	repo := storage.NewPostsRepo(s.log, s.conn)
+
+	err = repo.Update(s.ctx, params)
+	s.Require().NoError(err)
+
+	query := `SELECT p.id, title, description, content, extension, slug, is_published, category_id,
+							   c.name as category_name, created_at, updated_at
+						FROM posts p
+						INNER JOIN categories c ON p.category_id = c.id
+						WHERE p.id = $1; `
+
+	var postInDB domain.Post
+
+	s.Require().NoError(s.conn.GetContext(s.ctx, &postInDB, query, post.ID), "should fetch post")
+
+	s.Assert().Equal(params.Title, postInDB.Title)
+	s.Assert().Equal(params.Slug, postInDB.Slug)
+	s.Assert().Equal(params.Description, postInDB.Description)
+	s.Assert().Equal(params.CategoryID, postInDB.CategoryID)
+	s.Assert().Equal(params.Content, postInDB.Content)
+}
+
+func (s *StorageSuite) TestFind() {
+	expectedPost, err := s.insertTestPost("slug")
+	s.Require().NoError(err)
+
+	repo := storage.NewPostsRepo(s.log, s.conn)
+
+	s.Run("successfully find", func() {
+		resultPost, err2 := repo.Find(s.ctx, expectedPost.ID)
+		s.Require().NoError(err2)
+
+		s.Assert().Equal(expectedPost.Title, resultPost.Title)
+		s.Assert().Equal(expectedPost.Description, resultPost.Description)
+		s.Assert().Equal(expectedPost.Content, resultPost.Content)
+		s.Assert().Equal(expectedPost.Slug, resultPost.Slug, "slug should be equal")
+		s.Assert().Equal(expectedPost.CategoryID, resultPost.CategoryID, "category id should be equal")
+		s.Assert().Equal(expectedPost.Extension, resultPost.Extension, "extension should be equal")
+		s.Assert().Equal(expectedPost.CreatedAt, resultPost.CreatedAt, "created time should be equal")
+		s.Assert().Equal(expectedPost.UpdatedAt, resultPost.UpdatedAt, "updated time should be equal")
+	})
+
+	s.Run("empty result", func() {
+		resultPost, err2 := repo.Find(s.ctx, 1234)
+		s.Require().Error(err2)
+		s.Nil(resultPost)
+	})
+}
+
+func (s *StorageSuite) TestFindBySlug() {
+	expectedPost, err := s.insertTestPost("slug")
+	s.Require().NoError(err)
+
+	repo := storage.NewPostsRepo(s.log, s.conn)
+
+	s.Run("successfully find", func() {
+		resultPost, err2 := repo.FindBySlug(s.ctx, "slug")
+		s.Require().NoError(err2)
+
+		s.Assert().Equal(expectedPost.Title, resultPost.Title)
+		s.Assert().Equal(expectedPost.Description, resultPost.Description)
+		s.Assert().Equal(expectedPost.Content, resultPost.Content)
+		s.Assert().Equal(expectedPost.Slug, resultPost.Slug, "slug should be equal")
+		s.Assert().Equal(expectedPost.CategoryID, resultPost.CategoryID, "category id should be equal")
+		s.Assert().Equal(expectedPost.Extension, resultPost.Extension, "extension should be equal")
+		s.Assert().Equal(expectedPost.CreatedAt, resultPost.CreatedAt, "created time should be equal")
+		s.Assert().Equal(expectedPost.UpdatedAt, resultPost.UpdatedAt, "updated time should be equal")
+	})
+
+	s.Run("empty result", func() {
+		resultPost, err2 := repo.FindBySlug(s.ctx, "invalid")
+		s.Require().Error(err2)
+		s.Nil(resultPost)
+	})
 }
