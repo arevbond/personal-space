@@ -1,6 +1,7 @@
 package posts
 
 import (
+	"fmt"
 	"github.com/arevbond/arevbond-blog/internal/service/blog/domain"
 	"github.com/arevbond/arevbond-blog/internal/service/blog/storage"
 	"github.com/arevbond/arevbond-blog/internal/service/errs"
@@ -18,6 +19,7 @@ func (s *StorageSuite) insertTestPost(slug string) (*domain.Post, error) {
 		Slug:         slug,
 		CategoryID:   1,
 		CategoryName: "Книги",
+		IsPublished:  true,
 		CreatedAt:    time.Date(2005, 1, 1, 1, 0, 0, 0, time.Local),
 		UpdatedAt:    time.Date(2005, 1, 1, 1, 0, 0, 0, time.Local),
 	}
@@ -144,7 +146,7 @@ func (s *StorageSuite) TestPostsUpdate() {
 	s.Assert().Equal(params.Content, postInDB.Content)
 }
 
-func (s *StorageSuite) TestFind() {
+func (s *StorageSuite) TestPostsFind() {
 	expectedPost, err := s.insertTestPost("slug")
 	s.Require().NoError(err)
 
@@ -171,7 +173,7 @@ func (s *StorageSuite) TestFind() {
 	})
 }
 
-func (s *StorageSuite) TestFindBySlug() {
+func (s *StorageSuite) TestPostsFindBySlug() {
 	expectedPost, err := s.insertTestPost("slug")
 	s.Require().NoError(err)
 
@@ -196,4 +198,294 @@ func (s *StorageSuite) TestFindBySlug() {
 		s.Require().Error(err2)
 		s.Nil(resultPost)
 	})
+}
+
+func (s *StorageSuite) TestPostsAll() {
+	repo := storage.NewPostsRepo(s.log, s.conn)
+
+	// isPublished (true) - 3
+	// isPublished (false) -2
+	posts := make([]*domain.Post, 5)
+
+	for i := 0; i < 5; i++ {
+		posts[i] = &domain.Post{
+			Title:       fmt.Sprintf("Post %d", i+1),
+			Description: fmt.Sprintf("Description %d", i+1),
+			Content:     []byte(fmt.Sprintf("Content %d", i+1)),
+			Slug:        fmt.Sprintf("post-%d", i+1),
+			CategoryID:  1,
+			Extension:   ".md",
+			IsPublished: i%2 == 0,
+			CreatedAt:   time.Now().Add(-time.Duration(i) * time.Hour),
+			UpdatedAt:   time.Now(),
+		}
+		s.Require().NoError(repo.Create(s.ctx, posts[i]))
+	}
+
+	s.Run("posts only published", func() {
+		result, err := repo.All(s.ctx, 10, 0, true)
+		s.Require().NoError(err)
+
+		s.Require().Equal(3, len(result), "should return all published posts")
+	})
+
+	s.Run("all posts", func() {
+		result, err := repo.All(s.ctx, 10, 0, false)
+		s.Require().NoError(err)
+
+		s.Require().Equal(len(result), len(result), "should return all published posts")
+	})
+}
+
+func (s *StorageSuite) TestPostsAll_Pagination() {
+	repo := storage.NewPostsRepo(s.log, s.conn)
+
+	posts := make([]*domain.Post, 5)
+
+	for i := 0; i < 5; i++ {
+		posts[i] = &domain.Post{
+			Title:       fmt.Sprintf("Post %d", i+1),
+			Description: fmt.Sprintf("Description %d", i+1),
+			Content:     []byte(fmt.Sprintf("Content %d", i+1)),
+			Slug:        fmt.Sprintf("post-%d", i+1),
+			CategoryID:  1,
+			Extension:   ".md",
+			IsPublished: true,
+			CreatedAt:   time.Now().Add(-time.Duration(i) * time.Hour),
+			UpdatedAt:   time.Now(),
+		}
+		s.Require().NoError(repo.Create(s.ctx, posts[i]))
+	}
+
+	tests := []struct {
+		name          string
+		limit         int
+		offset        int
+		expectedCount int
+		expectedFirst string
+	}{
+		{
+			name:          "first page - limit 2",
+			limit:         2,
+			offset:        0,
+			expectedCount: 2,
+			expectedFirst: "Post 1",
+		},
+		{
+			name:          "second page - limit 2, offset 2",
+			limit:         2,
+			offset:        2,
+			expectedCount: 2,
+			expectedFirst: "Post 3",
+		},
+		{
+			name:          "last page - limit 2, offset 4",
+			limit:         2,
+			offset:        4,
+			expectedCount: 1,
+			expectedFirst: "Post 5",
+		},
+		{
+			name:          "offset beyond data",
+			limit:         2,
+			offset:        10,
+			expectedCount: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			result, err := repo.All(s.ctx, tt.limit, tt.offset, true)
+			s.Require().NoError(err)
+			s.Assert().Len(result, tt.expectedCount)
+
+			if tt.expectedCount > 0 {
+				s.Assert().Equal(tt.expectedFirst, result[0].Title)
+			}
+		})
+	}
+}
+
+func (s *StorageSuite) TestPostsSetPublicationStatus() {
+	post, err := s.insertTestPost("slug")
+	s.Require().NoError(err)
+
+	repo := storage.NewPostsRepo(s.log, s.conn)
+
+	err = repo.SetPublicationStatus(s.ctx, post.ID, !post.IsPublished)
+	s.Require().NoError(err)
+
+	postInDB, err := repo.FindBySlug(s.ctx, "slug")
+	s.Require().NoError(err)
+
+	s.Assert().Equal(!post.IsPublished, postInDB.IsPublished)
+}
+
+func (s *StorageSuite) TestPostsDelete() {
+	post, err := s.insertTestPost("slug")
+	s.Require().NoError(err)
+
+	_, err = s.insertTestPost("slug2")
+	s.Require().NoError(err)
+
+	repo := storage.NewPostsRepo(s.log, s.conn)
+
+	err = repo.Delete(s.ctx, post.ID)
+	s.Require().NoError(err)
+
+	var count int
+	query := `SELECT count(title) FROM POSTS `
+
+	s.Require().NoError(s.conn.GetContext(s.ctx, &count, query))
+
+	s.Assert().Equal(1, count)
+}
+
+func (s *StorageSuite) TestPostsAllWithCategory() {
+	repo := storage.NewPostsRepo(s.log, s.conn)
+
+	// Create test data:
+	// Category 1: 2 posts (1 published, 1 unpublished)
+	// Category 2: 3 posts (2 published, 1 unpublished)
+	posts := make([]*domain.Post, 5)
+
+	for i := 0; i < 5; i++ {
+		categoryID := 1
+		if i >= 2 { // First 2 posts go to category 1, rest to category 2
+			categoryID = 2
+		}
+
+		posts[i] = &domain.Post{
+			Title:       fmt.Sprintf("Post %d", i+1),
+			Description: fmt.Sprintf("Description %d", i+1),
+			Content:     []byte(fmt.Sprintf("Content %d", i+1)),
+			Slug:        fmt.Sprintf("post-%d", i+1),
+			CategoryID:  categoryID,
+			Extension:   ".md",
+			IsPublished: i != 1 && i != 4, // Post 2 and Post 5 are unpublished
+			CreatedAt:   time.Now().Add(-time.Duration(i) * time.Hour),
+			UpdatedAt:   time.Now(),
+		}
+		s.Require().NoError(repo.Create(s.ctx, posts[i]))
+	}
+
+	s.Run("published posts only from category 1", func() {
+		result, err := repo.AllWithCategory(s.ctx, 10, 0, true, 1)
+		s.Require().NoError(err)
+		s.Assert().Len(result, 1, "should return 1 published post from category 1")
+		s.Assert().Equal(1, result[0].CategoryID, "all posts should be from category 1")
+		s.Assert().True(result[0].IsPublished, "all posts should be published")
+	})
+
+	s.Run("published posts only from category 2", func() {
+		result, err := repo.AllWithCategory(s.ctx, 10, 0, true, 2)
+		s.Require().NoError(err)
+		s.Assert().Len(result, 2, "should return 2 published posts from category 2")
+		for _, post := range result {
+			s.Assert().Equal(2, post.CategoryID, "all posts should be from category 2")
+			s.Assert().True(post.IsPublished, "all posts should be published")
+		}
+	})
+
+	s.Run("all posts from category 1", func() {
+		result, err := repo.AllWithCategory(s.ctx, 10, 0, false, 1)
+		s.Require().NoError(err)
+		s.Assert().Len(result, 2, "should return all posts from category 1")
+		for _, post := range result {
+			s.Assert().Equal(1, post.CategoryID, "all posts should be from category 1")
+		}
+	})
+
+	s.Run("all posts from category 2", func() {
+		result, err := repo.AllWithCategory(s.ctx, 10, 0, false, 2)
+		s.Require().NoError(err)
+		s.Assert().Len(result, 3, "should return all posts from category 2")
+		for _, post := range result {
+			s.Assert().Equal(2, post.CategoryID, "all posts should be from category 2")
+		}
+	})
+}
+
+func (s *StorageSuite) TestPostsAllWithCategory_Pagination() {
+	repo := storage.NewPostsRepo(s.log, s.conn)
+
+	// Create 5 posts in category 1 for pagination testing
+	posts := make([]*domain.Post, 5)
+	for i := 0; i < 5; i++ {
+		posts[i] = &domain.Post{
+			Title:       fmt.Sprintf("Category1 Post %d", i+1),
+			Description: fmt.Sprintf("Description %d", i+1),
+			Content:     []byte(fmt.Sprintf("Content %d", i+1)),
+			Slug:        fmt.Sprintf("category1-post-%d", i+1),
+			CategoryID:  1, // All in category 1
+			Extension:   ".md",
+			IsPublished: true,
+			CreatedAt:   time.Now().Add(-time.Duration(i) * time.Hour),
+			UpdatedAt:   time.Now(),
+		}
+		s.Require().NoError(repo.Create(s.ctx, posts[i]))
+	}
+
+	tests := []struct {
+		name          string
+		limit         int
+		offset        int
+		categoryID    int
+		expectedCount int
+		expectedFirst string
+	}{
+		{
+			name:          "first page - limit 2, category 1",
+			limit:         2,
+			offset:        0,
+			categoryID:    1,
+			expectedCount: 2,
+			expectedFirst: "Category1 Post 1", // Most recent
+		},
+		{
+			name:          "second page - limit 2, offset 2, category 1",
+			limit:         2,
+			offset:        2,
+			categoryID:    1,
+			expectedCount: 2,
+			expectedFirst: "Category1 Post 3",
+		},
+		{
+			name:          "last page - limit 2, offset 4, category 1",
+			limit:         2,
+			offset:        4,
+			categoryID:    1,
+			expectedCount: 1,
+			expectedFirst: "Category1 Post 5",
+		},
+		{
+			name:          "offset beyond data",
+			limit:         2,
+			offset:        10,
+			categoryID:    1,
+			expectedCount: 0,
+		},
+		{
+			name:          "non-existent category",
+			limit:         10,
+			offset:        0,
+			categoryID:    999,
+			expectedCount: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			result, err := repo.AllWithCategory(s.ctx, tt.limit, tt.offset, true, tt.categoryID)
+			s.Require().NoError(err)
+			s.Assert().Len(result, tt.expectedCount)
+
+			if tt.expectedCount > 0 {
+				s.Assert().Equal(tt.expectedFirst, result[0].Title)
+				for _, post := range result {
+					s.Assert().Equal(tt.categoryID, post.CategoryID)
+				}
+			}
+		})
+	}
 }
