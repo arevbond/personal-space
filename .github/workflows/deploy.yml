@@ -75,9 +75,16 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          source: |
-            migrations
-            images
+          source: "migrations"
+          target: "/home/arevbond/arevbond-blog/"
+
+      - name: Copy images to VPS
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "images"
           target: "/home/arevbond/arevbond-blog/"
 
       - name: Restart app on VPS
