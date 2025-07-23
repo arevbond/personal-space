@@ -75,6 +75,8 @@ func (s *Server) ConfigureRoutes() {
 		mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServerFS(staticFS)))
 	}
 
+	mux.Handle("GET /images/", http.StripPrefix("/images/", http.FileServerFS(os.DirFS("images/"))))
+
 	mux.HandleFunc("GET /ping", s.ping)
 	mux.HandleFunc("GET /", s.htmlIndex)
 

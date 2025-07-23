@@ -92,7 +92,7 @@ func (b *Blog) CreatePost(ctx context.Context, params domain.CreatePostParams) (
 		params.Title = strings.TrimSuffix(params.Filename, filepath.Ext(params.Filename))
 	}
 
-	contentWithCorrectImages, err := b.ImageProcessor.AddPrefix(params.Content, "/static/images/")
+	contentWithCorrectImages, err := b.ImageProcessor.AddPrefix(params.Content, "/images/")
 	if err != nil {
 		return nil, fmt.Errorf("can't add prefix to image: %w", err)
 	}
@@ -218,7 +218,7 @@ func (b *Blog) removeSpecialChars(str string) string {
 }
 
 func (b *Blog) UpdatePost(ctx context.Context, params domain.UpdatePostParams) error {
-	contentWithCorrectImages, err := b.ImageProcessor.AddPrefix(params.Content, "/static/images/")
+	contentWithCorrectImages, err := b.ImageProcessor.AddPrefix(params.Content, "/images/")
 	if err != nil {
 		return fmt.Errorf("can't add prefix to image: %w", err)
 	}
