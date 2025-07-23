@@ -75,7 +75,9 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          source: "migrations/*"
+          source: |
+            migrations/*
+            images/*
           target: "/home/arevbond/arevbond-blog/"
 
       - name: Restart app on VPS
