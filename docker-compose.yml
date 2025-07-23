@@ -8,6 +8,8 @@ services:
         condition: service_completed_successfully
     ports:
       - 8080:8080
+    volumes:
+      - ./images:/app/images
     restart: unless-stopped
     env_file:
       - .env
