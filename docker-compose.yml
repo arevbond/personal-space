@@ -2,14 +2,13 @@ services:
   app:
     container_name: "app-arevbond"
     image: blessyo7/arevbond-blog
-    working_dir: /app
     depends_on:
       migrate:
         condition: service_completed_successfully
     ports:
       - 8080:8080
     volumes:
-      - ./images:/app/images
+      - ./images:/images
     restart: unless-stopped
     env_file:
       - .env
