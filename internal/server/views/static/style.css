@@ -45,21 +45,28 @@ article .border-top {
 
 
 /* INDEX PAGE */
-
 .profile-section {
-    max-width: 600px;
+    max-width: 800px;
     margin: 2rem auto;
-    text-align: center;
+    display: flex;
+    align-items: flex-start;
+    gap: 3rem;
+    text-align: left;
+}
+
+.profile-content {
+    flex: 1;
 }
 
 .profile-photo {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
+    width: auto;
+    height: 280px;
+    border-radius: 30%;
     object-fit: cover;
-    margin-bottom: 1.5rem;
     border: 3px solid #f8f9fa;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    flex-shrink: 0;
+    order: 2;
 }
 
 .about-text {
@@ -72,8 +79,8 @@ article .border-top {
 
 .contact-links {
     display: flex;
-    justify-content: center;
-    gap: 2rem;
+    justify-content: flex-start;
+    gap: 1.5rem;
     flex-wrap: wrap;
 }
 
@@ -104,6 +111,24 @@ article .border-top {
     color: #6c757d;
     font-weight: 300;
     margin-bottom: 2rem;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .profile-section {
+        flex-direction: column;
+        text-align: center;
+        gap: 2rem;
+    }
+
+    .profile-photo {
+        order: 0;
+        align-self: center;
+    }
+
+    .contact-links {
+        justify-content: center;
+    }
 }
 
 /* END INDEX PAGE */
