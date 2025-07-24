@@ -40,35 +40,48 @@
             {{ range .Posts }}
             <div class="card mb-3 shadow-sm">
                 <div class="card-body">
+                    <!-- Верхний блок: заголовок + категория + статус -->
                     <div class="d-flex justify-content-between align-items-start mb-2">
-                        <a href="/blog/posts/{{ .Slug }}" class="text-decoration-none text-reset"><h3 class="card-title mb-0">{{ .Title }}</h3></a>
-                        {{ if $.IsAdmin }}
                         <div>
-                            {{ if .IsPublished }}
-                            <span class="badge bg-success">Опубликовано</span>
-                            {{ else }}
-                            <span class="badge bg-secondary">Скрыто</span>
+                            <a href="/blog/posts/{{ .Slug }}" class="text-decoration-none text-reset">
+                                <h3 class="card-title mb-1">{{ .Title }}</h3>
+                            </a>
+                        </div>
+                        <div class="text-end">
+                            {{ if .CategoryName }}
+                            <div>
+                                <span class="badge bg-light text-dark">{{ .CategoryName }}</span>
+                            </div>
+                            {{ end }}
+                            {{ if $.IsAdmin }}
+                            <div class="mt-1">
+                                {{ if .IsPublished }}
+                                <span class="badge bg-success">Опубликовано</span>
+                                {{ else }}
+                                <span class="badge bg-secondary">Скрыто</span>
+                                {{ end }}
+                            </div>
                             {{ end }}
                         </div>
-                        {{ end }}
                     </div>
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <p class="card-text mb-0">
-                            <small class="text-muted">{{ .CreatedAt.Format "02.01.2006" }}</small>
-                        </p>
-                        {{ if .CategoryName }}
-                        <span class="badge bg-light text-dark">{{ .CategoryName }}</span>
-                        {{ end }}
-                    </div>
+
+                    <!-- Описание -->
                     <p class="card-text text-muted">{{ .Description }}</p>
-                    <a href="/blog/posts/{{ .Slug }}" class="btn btn-sm btn-outline-primary">Читать</a>
+
+                    <!-- Нижний блок: дата + кнопка -->
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <small class="text-muted">{{ .CreatedAt.Format "02.01.2006" }}</small>
+                        <a href="/blog/posts/{{ .Slug }}" class="btn btn-sm btn-outline-primary">Читать</a>
+                    </div>
                 </div>
             </div>
             {{ else }}
-                <p>Пока нет ни одного поста.</p>
+            <p>Пока нет ни одного поста.</p>
             {{ end }}
 
-            <div id="pagination">
+
+
+        <div id="pagination">
                 <!-- Buttons container with proper spacing and alignment -->
                 {{ if .HasNextPages }}
                 <div class="d-flex justify-content-center gap-3 mt-4">
@@ -87,12 +100,23 @@
 
 {{ define "pagination-posts" }}
     {{ range .Posts }}
-    <div class="card mb-3 shadow-sm">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-                <a href="/blog/posts/{{ .Slug }}" class="text-decoration-none text-reset"><h3 class="card-title mb-0">{{ .Title }}</h3></a>
-                {{ if $.IsAdmin }}
+<div class="card mb-3 shadow-sm">
+    <div class="card-body">
+        <!-- Верхний блок: заголовок + категория + статус -->
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+                <a href="/blog/posts/{{ .Slug }}" class="text-decoration-none text-reset">
+                    <h3 class="card-title mb-1">{{ .Title }}</h3>
+                </a>
+            </div>
+            <div class="text-end">
+                {{ if .CategoryName }}
                 <div>
+                    <span class="badge bg-light text-dark">{{ .CategoryName }}</span>
+                </div>
+                {{ end }}
+                {{ if $.IsAdmin }}
+                <div class="mt-1">
                     {{ if .IsPublished }}
                     <span class="badge bg-success">Опубликовано</span>
                     {{ else }}
@@ -101,18 +125,18 @@
                 </div>
                 {{ end }}
             </div>
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <p class="card-text mb-0">
-                    <small class="text-muted">{{ .CreatedAt.Format "02.01.2006" }}</small>
-                </p>
-                {{ if .CategoryName }}
-                <span class="badge bg-light text-dark">{{ .CategoryName }}</span>
-                {{ end }}
-            </div>
-            <p class="card-text text-muted">{{ .Description }}</p>
+        </div>
+
+        <!-- Описание -->
+        <p class="card-text text-muted">{{ .Description }}</p>
+
+        <!-- Нижний блок: дата + кнопка -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <small class="text-muted">{{ .CreatedAt.Format "02.01.2006" }}</small>
             <a href="/blog/posts/{{ .Slug }}" class="btn btn-sm btn-outline-primary">Читать</a>
         </div>
     </div>
+</div>
     {{ end }}
 
 
