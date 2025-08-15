@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8" />
     {{ template "heads.html" }}
+    <!-- Bootstrap Icons CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <title>Arevbond Blog</title>
 </head>
 <body>
@@ -13,11 +15,11 @@
         <!-- Колонка с категориями -->
 
         <div class="col-md-4 order-1 order-md-2">
-<!--            <div class="card mb-3">-->
-<!--                <div class="card-body">-->
-<!--                    <p class="subtitle mb-0">Здесь я учусь формулировать и излагать свои мысли, чтобы лучше понимать и запоминать то, о чём думаю и читаю.</p>-->
-<!--                </div>-->
-<!--            </div>-->
+            <!--            <div class="card mb-3">-->
+            <!--                <div class="card-body">-->
+            <!--                    <p class="subtitle mb-0">Здесь я учусь формулировать и излагать свои мысли, чтобы лучше понимать и запоминать то, о чём думаю и читаю.</p>-->
+            <!--                </div>-->
+            <!--            </div>-->
 
             <div class="card mb-3">
                 <div class="card-header bg-light">
@@ -40,7 +42,7 @@
             {{ range .Posts }}
             <div class="card mb-3 shadow-sm">
                 <div class="card-body">
-                    <!-- Верхний блок: заголовок + категория + статус -->
+                    <!-- Верхний блок: заголовок + статус -->
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <div>
                             <a href="/blog/posts/{{ .Slug }}" class="text-decoration-none text-reset">
@@ -48,11 +50,6 @@
                             </a>
                         </div>
                         <div class="text-end">
-                            {{ if .CategoryName }}
-                            <div>
-                                <span class="badge bg-light text-dark">{{ .CategoryName }}</span>
-                            </div>
-                            {{ end }}
                             {{ if $.IsAdmin }}
                             <div class="mt-1">
                                 {{ if .IsPublished }}
@@ -68,9 +65,18 @@
                     <!-- Описание -->
                     <p class="card-text text-muted">{{ .Description }}</p>
 
-                    <!-- Нижний блок: дата + кнопка -->
+                    <!-- Нижний блок: дата + категория + кнопка -->
                     <div class="d-flex justify-content-between align-items-center mt-3">
-                        <small class="text-muted">{{ .CreatedAt.Format "02.01.2006" }}</small>
+                        <div class="d-flex align-items-center gap-3">
+                            <small class="text-muted">
+                                <i class="bi bi-calendar3 me-1"></i>{{ .CreatedAt.Format "02.01.2006" }}
+                            </small>
+                            {{ if .CategoryName }}
+                            <small class="text-muted">
+                                <i class="bi bi-tag me-1"></i>{{ .CategoryName }}
+                            </small>
+                            {{ end }}
+                        </div>
                         <a href="/blog/posts/{{ .Slug }}" class="btn btn-sm btn-outline-primary">Читать</a>
                     </div>
                 </div>
@@ -81,12 +87,12 @@
 
 
 
-        <div id="pagination">
+            <div id="pagination">
                 <!-- Buttons container with proper spacing and alignment -->
                 {{ if .HasNextPages }}
                 <div class="d-flex justify-content-center gap-3 mt-4">
                     <button type="button" hx-get="/blog/posts/more?offset={{ .NextOffset }}&category_id={{ .SelectedCategoryID }}"
-                     hx-target="#pagination" hx-swap="outerHTML" class="btn btn-outline-primary">Load More</button>
+                            hx-target="#pagination" hx-swap="outerHTML" class="btn btn-outline-primary">Load More</button>
                 </div>
                 {{ end }}
             </div>
@@ -99,10 +105,10 @@
 </html>
 
 {{ define "pagination-posts" }}
-    {{ range .Posts }}
+{{ range .Posts }}
 <div class="card mb-3 shadow-sm">
     <div class="card-body">
-        <!-- Верхний блок: заголовок + категория + статус -->
+        <!-- Верхний блок: заголовок + статус -->
         <div class="d-flex justify-content-between align-items-start mb-2">
             <div>
                 <a href="/blog/posts/{{ .Slug }}" class="text-decoration-none text-reset">
@@ -110,11 +116,6 @@
                 </a>
             </div>
             <div class="text-end">
-                {{ if .CategoryName }}
-                <div>
-                    <span class="badge bg-light text-dark">{{ .CategoryName }}</span>
-                </div>
-                {{ end }}
                 {{ if $.IsAdmin }}
                 <div class="mt-1">
                     {{ if .IsPublished }}
@@ -130,23 +131,32 @@
         <!-- Описание -->
         <p class="card-text text-muted">{{ .Description }}</p>
 
-        <!-- Нижний блок: дата + кнопка -->
+        <!-- Нижний блок: дата + категория + кнопка -->
         <div class="d-flex justify-content-between align-items-center mt-3">
-            <small class="text-muted">{{ .CreatedAt.Format "02.01.2006" }}</small>
+            <div class="d-flex align-items-center gap-3">
+                <small class="text-muted">
+                    <i class="bi bi-calendar3 me-1"></i>{{ .CreatedAt.Format "02.01.2006" }}
+                </small>
+                {{ if .CategoryName }}
+                <small class="text-muted">
+                    <i class="bi bi-tag me-1"></i>{{ .CategoryName }}
+                </small>
+                {{ end }}
+            </div>
             <a href="/blog/posts/{{ .Slug }}" class="btn btn-sm btn-outline-primary">Читать</a>
         </div>
     </div>
 </div>
-    {{ end }}
+{{ end }}
 
 
-    <div id="pagination">
-        <!-- Buttons container with proper spacing and alignment -->
-        {{ if .HasNextPages }}
-        <div class="d-flex justify-content-center gap-3 mt-4">
-            <button type="button" hx-get="/blog/posts/more?offset={{ .NextOffset }}&category_id={{ .SelectedCategoryID }}"
-             hx-target="#pagination" hx-swap="outerHTML" class="btn btn-outline-primary">Load More</button>
-        </div>
-        {{ end }}
+<div id="pagination">
+    <!-- Buttons container with proper spacing and alignment -->
+    {{ if .HasNextPages }}
+    <div class="d-flex justify-content-center gap-3 mt-4">
+        <button type="button" hx-get="/blog/posts/more?offset={{ .NextOffset }}&category_id={{ .SelectedCategoryID }}"
+                hx-target="#pagination" hx-swap="outerHTML" class="btn btn-outline-primary">Load More</button>
     </div>
+    {{ end }}
+</div>
 {{ end }}
