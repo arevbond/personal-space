@@ -6,6 +6,25 @@
     <!-- Bootstrap Icons CDN -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <title>Arevbond Blog</title>
+    <style>
+        .clickable-card {
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .clickable-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .clickable-card h3 a {
+            pointer-events: none;
+        }
+    </style>
 </head>
 <body>
 <main class="container py-4">
@@ -40,34 +59,32 @@
         <!-- Основная колонка с постами -->
         <div class="col-md-8 order-2 order-md-1">
             {{ range .Posts }}
-            <div class="card mb-3 shadow-sm">
-                <div class="card-body">
-                    <!-- Верхний блок: заголовок + статус -->
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <div>
-                            <a href="/blog/posts/{{ .Slug }}" class="text-decoration-none text-reset">
+            <a href="/blog/posts/{{ .Slug }}" class="clickable-card text-decoration-none text-reset d-block">
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <!-- Верхний блок: заголовок + статус -->
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
                                 <h3 class="card-title mb-1">{{ .Title }}</h3>
-                            </a>
-                        </div>
-                        <div class="text-end">
-                            {{ if $.IsAdmin }}
-                            <div class="mt-1">
-                                {{ if .IsPublished }}
-                                <span class="badge bg-success">Опубликовано</span>
-                                {{ else }}
-                                <span class="badge bg-secondary">Скрыто</span>
+                            </div>
+                            <div class="text-end">
+                                {{ if $.IsAdmin }}
+                                <div class="mt-1">
+                                    {{ if .IsPublished }}
+                                    <span class="badge bg-success">Опубликовано</span>
+                                    {{ else }}
+                                    <span class="badge bg-secondary">Скрыто</span>
+                                    {{ end }}
+                                </div>
                                 {{ end }}
                             </div>
-                            {{ end }}
                         </div>
-                    </div>
 
-                    <!-- Описание -->
-                    <p class="card-text text-muted">{{ .Description }}</p>
+                        <!-- Описание -->
+                        <p class="card-text text-muted">{{ .Description }}</p>
 
-                    <!-- Нижний блок: дата + категория + кнопка -->
-                    <div class="d-flex justify-content-between align-items-center mt-3">
-                        <div class="d-flex align-items-center gap-3">
+                        <!-- Нижний блок: дата + категория -->
+                        <div class="d-flex align-items-center gap-3 mt-3">
                             <small class="text-muted">
                                 <i class="bi bi-calendar3 me-1"></i>{{ .CreatedAt.Format "02.01.2006" }}
                             </small>
@@ -77,10 +94,9 @@
                             </small>
                             {{ end }}
                         </div>
-                        <a href="/blog/posts/{{ .Slug }}" class="btn btn-sm btn-outline-primary">Читать</a>
                     </div>
                 </div>
-            </div>
+            </a>
             {{ else }}
             <p>Пока нет ни одного поста.</p>
             {{ end }}
@@ -106,34 +122,32 @@
 
 {{ define "pagination-posts" }}
 {{ range .Posts }}
-<div class="card mb-3 shadow-sm">
-    <div class="card-body">
-        <!-- Верхний блок: заголовок + статус -->
-        <div class="d-flex justify-content-between align-items-start mb-2">
-            <div>
-                <a href="/blog/posts/{{ .Slug }}" class="text-decoration-none text-reset">
+<a href="/blog/posts/{{ .Slug }}" class="clickable-card text-decoration-none text-reset d-block">
+    <div class="card mb-3 shadow-sm">
+        <div class="card-body">
+            <!-- Верхний блок: заголовок + статус -->
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
                     <h3 class="card-title mb-1">{{ .Title }}</h3>
-                </a>
-            </div>
-            <div class="text-end">
-                {{ if $.IsAdmin }}
-                <div class="mt-1">
-                    {{ if .IsPublished }}
-                    <span class="badge bg-success">Опубликовано</span>
-                    {{ else }}
-                    <span class="badge bg-secondary">Скрыто</span>
+                </div>
+                <div class="text-end">
+                    {{ if $.IsAdmin }}
+                    <div class="mt-1">
+                        {{ if .IsPublished }}
+                        <span class="badge bg-success">Опубликовано</span>
+                        {{ else }}
+                        <span class="badge bg-secondary">Скрыто</span>
+                        {{ end }}
+                    </div>
                     {{ end }}
                 </div>
-                {{ end }}
             </div>
-        </div>
 
-        <!-- Описание -->
-        <p class="card-text text-muted">{{ .Description }}</p>
+            <!-- Описание -->
+            <p class="card-text text-muted">{{ .Description }}</p>
 
-        <!-- Нижний блок: дата + категория + кнопка -->
-        <div class="d-flex justify-content-between align-items-center mt-3">
-            <div class="d-flex align-items-center gap-3">
+            <!-- Нижний блок: дата + категория -->
+            <div class="d-flex align-items-center gap-3 mt-3">
                 <small class="text-muted">
                     <i class="bi bi-calendar3 me-1"></i>{{ .CreatedAt.Format "02.01.2006" }}
                 </small>
@@ -143,10 +157,9 @@
                 </small>
                 {{ end }}
             </div>
-            <a href="/blog/posts/{{ .Slug }}" class="btn btn-sm btn-outline-primary">Читать</a>
         </div>
     </div>
-</div>
+</a>
 {{ end }}
 
 
